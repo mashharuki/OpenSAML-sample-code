@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Privat on 13/05/14.
+ * SPの資格情報を管理するクラス
  */
 public class SPCredentials {
     private static final String KEY_STORE_PASSWORD = "password";
@@ -30,9 +30,11 @@ public class SPCredentials {
 
     static {
         try {
+            // キーストアの読み込みと資格情報の解決
             KeyStore keystore = readKeystoreFromFile(KEY_STORE_PATH, KEY_STORE_PASSWORD);
             Map<String, String> passwordMap = new HashMap<String, String>();
             passwordMap.put(KEY_ENTRY_ID, KEY_STORE_ENTRY_PASSWORD);
+            // キーストアの読み込むためのリゾルバの作成
             KeyStoreCredentialResolver resolver = new KeyStoreCredentialResolver(keystore, passwordMap);
 
             Criterion criterion = new EntityIdCriterion(KEY_ENTRY_ID);

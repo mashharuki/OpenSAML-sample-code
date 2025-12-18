@@ -10,6 +10,10 @@ import java.io.IOException;
  * This servlet acts as the resource that the access filter is protecting
  */
 public class ApplicationServlet extends HttpServlet {
+    /**
+     * Handles the HTTP <code>GET</code> method.
+     * 保護ページ SAML認証を突破しないと表示されないリソース
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html");

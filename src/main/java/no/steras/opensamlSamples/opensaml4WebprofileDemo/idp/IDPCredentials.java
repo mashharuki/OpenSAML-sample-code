@@ -5,6 +5,9 @@ import org.opensaml.security.credential.CredentialSupport;
 import org.opensaml.security.crypto.KeySupport;
 import java.security.*;
 
+/**
+ * IDP用資格情報クラス
+ */
 public class IDPCredentials {
     private static final Credential credential;
 
@@ -12,8 +15,12 @@ public class IDPCredentials {
         credential = generateCredential();
     }
 
+    /**
+     * 資格情報の生成
+     */
     private static Credential generateCredential() {
         try {
+            // キーペアの生成
             KeyPair keyPair = KeySupport.generateKeyPair("RSA", 1024, null);
             return CredentialSupport.getSimpleCredential(keyPair.getPublic(), keyPair.getPrivate());
         } catch (NoSuchAlgorithmException e) {
@@ -23,6 +30,9 @@ public class IDPCredentials {
         }
     }
 
+    /**
+     * 資格情報の取得
+     */
     public static Credential getCredential() {
         return credential;
     }

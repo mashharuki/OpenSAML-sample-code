@@ -12,9 +12,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
 
+/**
+ * シングルサインオンサーブレット
+ */
 public class SingleSignOnServlet extends HttpServlet {
     private static Logger logger = LoggerFactory.getLogger(SingleSignOnServlet.class);
 
+    /**
+     * GETメソッド処理
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         logger.info("AuthnRequest recieved");
@@ -24,8 +30,14 @@ public class SingleSignOnServlet extends HttpServlet {
                 + "<input type=\"submit\" value=\"Authenticate\"/>" + "</form>" + "</body>" + "</html>");
     }
 
+    /**
+     * POSTメソッド処理
+     * SAMLリクエスト受信後の認証処理完了後に呼び出される想定
+     */
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+        // 実際の認証処理は省略し、認証成功したものとしてSAMLアーティファクトをSPに送信する
+        logger.info("User authenticated, sending SAML Artifact to SP");
         resp.sendRedirect(SPConstants.ASSERTION_CONSUMER_SERVICE + "?SAMLart=AAQAAMFbLinlXaCM%2BFIxiDwGOLAy2T71gbpO7ZhNzAgEANlB90ECfpNEVLg%3D");
     }
 

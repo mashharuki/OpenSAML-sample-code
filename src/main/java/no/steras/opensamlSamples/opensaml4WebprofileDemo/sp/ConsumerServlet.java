@@ -58,32 +58,39 @@ import no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.IDPConstants;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.IDPCredentials;
 
 /**
- * Created by Privat on 4/6/14.
+ * コンシューマーサーブレッド
  */
 public class ConsumerServlet extends HttpServlet {
 	private static Logger logger = LoggerFactory.getLogger(ConsumerServlet.class);
 
+	/**
+	 * ARTIFACT受信処理
+	 * SAMLレスポンスを受信してアサーションを抽出、署名検証、復号化を行う
+	 */
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
 		logger.info("Artifact received");
+		// リクエストからArtifactを構築
 		Artifact artifact = buildArtifactFromRequest(req);
 		logger.info("Artifact: " + artifact.getArtifact());
-
+		// ArtifactResolveを構築
 		ArtifactResolve artifactResolve = buildArtifactResolve(artifact);
 		logger.info("Sending ArtifactResolve");
 		logger.info("ArtifactResolve: ");
+		// ログ出力用に出力
 		OpenSAMLUtils.logSAMLObject(artifactResolve);
-
+		// ArtifactResolve送信、ArtifactResponse受信
 		ArtifactResponse artifactResponse = sendAndReceiveArtifactResolve(artifactResolve, resp);
 		logger.info("ArtifactResponse received");
 		logger.info("ArtifactResponse: ");
 		OpenSAMLUtils.logSAMLObject(artifactResponse);
 
 		validateDestinationAndLifetime(artifactResponse, req);
-
+        // アサーションを取得、復号化、署名検証
 		EncryptedAssertion encryptedAssertion = getEncryptedAssertion(artifactResponse);
 		Assertion assertion = decryptAssertion(encryptedAssertion);
+		// 署名検証
 		verifyAssertionSignature(assertion);
 		logger.info("Decrypted Assertion: ");
 		OpenSAMLUtils.logSAMLObject(assertion);
@@ -96,6 +103,9 @@ public class ConsumerServlet extends HttpServlet {
 		redirectToGotoURL(req, resp);
 	}
 
+	/**
+	 * Destinationと有効期限の検証
+	 */
 	private void validateDestinationAndLifetime(ArtifactResponse artifactResponse, HttpServletRequest request) {
 		MessageContext context = new MessageContext();
 		context.setMessage(artifactResponse);
@@ -128,6 +138,9 @@ public class ConsumerServlet extends HttpServlet {
 
 	}
 
+	/**
+	 * アサーションの復号化
+	 */
 	private Assertion decryptAssertion(EncryptedAssertion encryptedAssertion) {
 		StaticKeyInfoCredentialResolver keyInfoCredentialResolver = new StaticKeyInfoCredentialResolver(
 				SPCredentials.getCredential());
@@ -142,6 +155,9 @@ public class ConsumerServlet extends HttpServlet {
 		}
 	}
 
+	/**
+	 * アサーション署名の検証
+	 */
 	private void verifyAssertionSignature(Assertion assertion) {
 
 		if (!assertion.isSigned()) {
@@ -161,20 +177,30 @@ public class ConsumerServlet extends HttpServlet {
 
 	}
 
+	/**
+	 * 認証済みセッションの設定
+	 */
 	private void setAuthenticatedSession(HttpServletRequest req) {
 		req.getSession().setAttribute(SPConstants.AUTHENTICATED_SESSION_ATTRIBUTE, true);
 	}
 
+	/**
+	 * GotoURLへリダイレクト
+	 */
 	private void redirectToGotoURL(HttpServletRequest req, HttpServletResponse resp) {
 		String gotoURL = (String) req.getSession().getAttribute(SPConstants.GOTO_URL_SESSION_ATTRIBUTE);
 		logger.info("Redirecting to requested URL: " + gotoURL);
 		try {
+			// リダイレクト
 			resp.sendRedirect(gotoURL);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
+	/**
+	 * 認証方法のログ出力
+	 */
 	private void logAuthenticationMethod(Assertion assertion) {
 		logger.info("Authentication method: "
 				+ assertion.getAuthnStatements().get(0).getAuthnContext().getAuthnContextClassRef().getURI());
@@ -193,11 +219,17 @@ public class ConsumerServlet extends HttpServlet {
 		}
 	}
 
+	/**
+	 * アサーションの復号化
+	 */
 	private EncryptedAssertion getEncryptedAssertion(ArtifactResponse artifactResponse) {
 		Response response = (Response) artifactResponse.getMessage();
 		return response.getEncryptedAssertions().get(0);
 	}
 
+	/**
+	 * ArtifactResolve送信、ArtifactResponse受信
+	 */
 	private ArtifactResponse sendAndReceiveArtifactResolve(final ArtifactResolve artifactResolve,
 			HttpServletResponse servletResponse) {
 		try {
@@ -251,12 +283,18 @@ public class ConsumerServlet extends HttpServlet {
 
 	}
 
+	/**
+	 * リクエストからArtifactを構築
+	 */
 	private Artifact buildArtifactFromRequest(final HttpServletRequest req) {
 		Artifact artifact = OpenSAMLUtils.buildSAMLObject(Artifact.class);
 		artifact.setValue(req.getParameter("SAMLart"));
 		return artifact;
 	}
 
+	/**
+	 * ArtifactResolveを構築
+	 */
 	private ArtifactResolve buildArtifactResolve(final Artifact artifact) {
 		ArtifactResolve artifactResolve = OpenSAMLUtils.buildSAMLObject(ArtifactResolve.class);
 
