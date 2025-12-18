@@ -1,28 +1,29 @@
 # CodeRabbit Configuration for OpenSAML Sample Code
+# 言語設定: 日本語でレビューを実施
 language: ja
 
 reviews:
-  # Enable automatic reviews
+  # 自動レビューを有効化
   auto_review:
     enabled: true
     drafts: false
 
-  # Request changes for high severity issues
+  # 重大度の高い問題に対して変更を要求
   request_changes_workflow: true
 
-  # High level summary
+  # 高レベルのサマリーを表示
   high_level_summary: true
 
-  # Review level summary
+  # レビューレベルのサマリー（ポエム形式は無効）
   poem: false
 
-  # Review specific settings
+  # レビュープロファイル
   profile: chill
 
-  # Collapse walkthrough on PR page
+  # PRページでウォークスルーを折りたたまない
   collapse_walkthrough: false
 
-  # Auto-approve simple changes
+  # 軽微な変更の自動承認
   auto_approve:
     enabled: true
     conditions:
@@ -30,62 +31,62 @@ reviews:
       - "changes_count <= 50"
       - "only_changes_to: ['*.md', '*.txt', '*.json', '*.yaml', '*.yml']"
 
-# Path-based instructions
+# パス別のレビュー指示
 path_instructions:
   - path: "src/main/java/**/*.java"
     instructions: |
-      - Check for proper exception handling
-      - Verify SAML security best practices
-      - Ensure proper logging
-      - Check for null pointer safety
-      - Verify thread safety in servlet code
+      - 適切な例外処理が実装されているか確認してください
+      - SAMLセキュリティのベストプラクティスに従っているか検証してください
+      - 適切なログ出力が実装されているか確認してください
+      - nullポインタ安全性をチェックしてください
+      - サーブレットコードでスレッドセーフティを検証してください
 
   - path: "src/main/resources/**/*"
     instructions: |
-      - Verify configuration security
-      - Check for sensitive data exposure
-      - Ensure proper logging configuration
+      - 設定ファイルのセキュリティを検証してください
+      - 機密情報の漏洩がないか確認してください
+      - ログ設定が適切か確認してください
 
   - path: "pom.xml"
     instructions: |
-      - Check for dependency vulnerabilities
-      - Verify version compatibility
-      - Ensure proper dependency management
+      - 依存関係の脆弱性をチェックしてください
+      - バージョンの互換性を確認してください
+      - 依存関係管理が適切か確認してください
 
   - path: "src/main/webapp/**/*"
     instructions: |
-      - Check for XSS vulnerabilities
-      - Verify proper SAML handling
-      - Ensure secure configuration
+      - XSS脆弱性がないか確認してください
+      - SAMLの処理が適切か検証してください
+      - セキュアな設定になっているか確認してください
 
-# Chat settings
+# チャット設定
 chat:
   auto_reply: true
 
-# Code quality checks
+# コード品質チェック
 checks:
-  # Security checks
+  # セキュリティチェック
   security:
     enabled: true
     severity: high
 
-  # Code smell detection
+  # コードスメル検出
   code_smell:
     enabled: true
 
-  # Best practices
+  # ベストプラクティス
   best_practices:
     enabled: true
 
-  # Performance issues
+  # パフォーマンス問題
   performance:
     enabled: true
 
-  # Documentation
+  # ドキュメンテーション
   documentation:
     enabled: true
 
-# Files to ignore
+# 無視するファイル
 ignore:
   - "target/**"
   - "*.class"
@@ -95,44 +96,46 @@ ignore:
   - ".git/**"
   - "certificates/**"
 
-# Knowledge base paths
+# ナレッジベースパス
 knowledge_base:
   - "README.md"
   - "pom.xml"
   - "src/main/java/**/*.java"
 
-# Custom rules for SAML/OpenSAML
+# SAML/OpenSAML用カスタムルール
 custom_rules:
   - id: saml-validation
-    description: "Ensure SAML responses are properly validated"
+    description: "SAML応答の適切な検証を確認"
     pattern: "Response.*process"
     severity: high
-    message: "SAML responses must be validated for signature and integrity"
+    message: "SAML応答は署名と整合性を検証する必要があります"
 
   - id: encryption-check
-    description: "Verify encryption is properly implemented"
+    description: "暗号化の適切な実装を検証"
     pattern: "Encrypter|Decrypter"
     severity: high
-    message: "Ensure encryption keys are securely managed"
+    message: "暗号化キーが安全に管理されているか確認してください"
 
   - id: servlet-security
-    description: "Check servlet security configuration"
+    description: "サーブレットのセキュリティ設定を確認"
     pattern: "doGet|doPost"
     severity: medium
-    message: "Verify proper authentication and authorization in servlets"
+    message: "サーブレットで適切な認証と認可が実装されているか確認してください"
 
-# PR labels
+# PRラベル
 labels:
   - "security"
   - "saml"
   - "java"
   - "maven"
 
-# Tone and style
+# トーンとスタイル
 tone_instructions: |
-  - Be concise and constructive
-  - Focus on security and SAML best practices
-  - Provide actionable suggestions
-  - Use Japanese for comments when appropriate
-  - Highlight potential security vulnerabilities
-  - Suggest improvements for code maintainability
+  すべてのレビューコメントは日本語で記載してください。
+  以下の点に注意してレビューを実施してください：
+  - 簡潔で建設的なフィードバックを提供する
+  - セキュリティとSAMLのベストプラクティスに焦点を当てる
+  - 実行可能な改善提案を行う
+  - 潜在的なセキュリティ脆弱性を強調する
+  - コードの保守性向上のための提案を行う
+  - 丁寧で分かりやすい日本語を使用する
