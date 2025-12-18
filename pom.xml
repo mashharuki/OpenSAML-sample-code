@@ -130,6 +130,20 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
             </plugin>
+            <!-- Jetty 12 Plugin for Jakarta EE 10 / Java 21 -->
+            <plugin>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-maven-plugin</artifactId>
+                <version>12.0.14</version>
+                <configuration>
+                    <webApp>
+                        <contextPath>/opensaml5-webprofile-demo</contextPath>
+                    </webApp>
+                    <httpConnector>
+                        <port>8080</port>
+                    </httpConnector>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
