@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.xml.security.utils.EncryptionConstants;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -51,8 +51,8 @@ import org.opensaml.xmlsec.signature.support.Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.xml.BasicParserPool;
+import net.shibboleth.shared.component.ComponentInitializationException;
+import net.shibboleth.shared.xml.impl.BasicParserPool;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.OpenSAMLUtils;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.SPConstants;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.SPCredentials;
@@ -72,8 +72,7 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		logger.debug("recieved artifactResolve:");
 		// アーティファクト解決リクエストのデコード
 		HTTPSOAP11Decoder decoder = new HTTPSOAP11Decoder();
-	    // リクエストをセット
-		decoder.setHttpServletRequest(req);
+		decoder.setHttpServletRequestSupplier(() -> req);
 
 		try {
 			BasicParserPool parserPool = new BasicParserPool();
@@ -93,8 +92,8 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		context.setMessage(artifactResponse);
 		// アーティファクト解決レスポンスのエンコードと送信
 		HTTPSOAP11Encoder encoder = new HTTPSOAP11Encoder();
+		encoder.setHttpServletResponseSupplier(() -> resp);
 		encoder.setMessageContext(context);
-		encoder.setHttpServletResponse(resp);
 
 		try {
 			// エンコーダー初期化

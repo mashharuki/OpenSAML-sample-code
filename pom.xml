@@ -5,19 +5,29 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>no.steras.opensaml-samples</groupId>
-    <artifactId>opensaml4-webprofile-demo</artifactId>
+    <artifactId>opensaml5-webprofile-demo</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <properties>
-		<opensaml.version>4.1.1</opensaml.version>
+        <opensaml.version>5.1.6</opensaml.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+        <!-- OpenSAML 5 Core -->
         <dependency>
             <groupId>org.opensaml</groupId>
-            <artifactId>opensaml-core</artifactId>
+            <artifactId>opensaml-core-api</artifactId>
             <version>${opensaml.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-core-impl</artifactId>
+            <version>${opensaml.version}</version>
+        </dependency>
+        <!-- OpenSAML 5 SAML -->
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-saml-api</artifactId>
@@ -28,6 +38,7 @@
             <artifactId>opensaml-saml-impl</artifactId>
             <version>${opensaml.version}</version>
         </dependency>
+        <!-- OpenSAML 5 Messaging -->
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-messaging-api</artifactId>
@@ -38,6 +49,7 @@
             <artifactId>opensaml-messaging-impl</artifactId>
             <version>${opensaml.version}</version>
         </dependency>
+        <!-- OpenSAML 5 SOAP -->
         <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-soap-api</artifactId>
@@ -48,32 +60,90 @@
             <artifactId>opensaml-soap-impl</artifactId>
             <version>${opensaml.version}</version>
         </dependency>
-         <dependency>
+        <!-- OpenSAML 5 Security -->
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-security-api</artifactId>
+            <version>${opensaml.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-security-impl</artifactId>
+            <version>${opensaml.version}</version>
+        </dependency>
+        <!-- OpenSAML 5 XMLSec -->
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-xmlsec-api</artifactId>
+            <version>${opensaml.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-xmlsec-impl</artifactId>
+            <version>${opensaml.version}</version>
+        </dependency>
+        <!-- Logback -->
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>1.1.7</version>
+            <version>1.4.14</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.1.7</version>
+            <version>1.4.14</version>
         </dependency>
+        <!-- Jakarta Servlet API (OpenSAML 5 requires Jakarta EE) -->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Commons Logging -->
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-            <version>1.2</version>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
     <repositories>
         <repository>
-            <id>shib-release</id>
-            <url>https://build.shibboleth.net/nexus/content/repositories/releases</url>
+            <id>shibboleth</id>
+            <name>Shibboleth Maven Repository</name>
+            <url>https://build.shibboleth.net/maven/releases/</url>
         </repository>
     </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+            </plugin>
+            <!-- Jetty 12 Plugin for Jakarta EE 10 / Java 21 -->
+            <plugin>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-maven-plugin</artifactId>
+                <version>12.0.14</version>
+                <configuration>
+                    <webApp>
+                        <contextPath>/opensaml5-webprofile-demo</contextPath>
+                    </webApp>
+                    <httpConnector>
+                        <port>8080</port>
+                    </httpConnector>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

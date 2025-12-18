@@ -1,9 +1,9 @@
-<!DOCTYPE web-app PUBLIC
-        "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
-        "http://java.sun.com/dtd/web-app_2_3.dtd" >
-
-<web-app>
-    <display-name>Archetype Created Web Application</display-name>
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+    <display-name>OpenSAML 5 Web Profile Demo</display-name>
 
     <servlet>
         <servlet-name>ApplicationServlet</servlet-name>
@@ -17,7 +17,7 @@
         <servlet-name>ConsumerServlet</servlet-name>
         <servlet-class>no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.ConsumerServlet</servlet-class>
     </servlet>
-	<servlet>
+    <servlet>
         <servlet-name>ArtifactResolutionServlet</servlet-name>
         <servlet-class>no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.ArtifactResolutionServlet</servlet-class>
     </servlet>
@@ -34,7 +34,7 @@
         <servlet-name>ConsumerServlet</servlet-name>
         <url-pattern>/sp/consumer</url-pattern>
     </servlet-mapping>
-	<servlet-mapping>
+    <servlet-mapping>
         <servlet-name>ArtifactResolutionServlet</servlet-name>
         <url-pattern>/idp/artifactResolutionService</url-pattern>
     </servlet-mapping>
