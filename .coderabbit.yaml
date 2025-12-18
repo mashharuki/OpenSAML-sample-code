@@ -1,0 +1,138 @@
+# CodeRabbit Configuration for OpenSAML Sample Code
+language: ja
+
+reviews:
+  # Enable automatic reviews
+  auto_review:
+    enabled: true
+    drafts: false
+
+  # Request changes for high severity issues
+  request_changes_workflow: true
+
+  # High level summary
+  high_level_summary: true
+
+  # Review level summary
+  poem: false
+
+  # Review specific settings
+  profile: chill
+
+  # Collapse walkthrough on PR page
+  collapse_walkthrough: false
+
+  # Auto-approve simple changes
+  auto_approve:
+    enabled: true
+    conditions:
+      - "files_count <= 2"
+      - "changes_count <= 50"
+      - "only_changes_to: ['*.md', '*.txt', '*.json', '*.yaml', '*.yml']"
+
+# Path-based instructions
+path_instructions:
+  - path: "src/main/java/**/*.java"
+    instructions: |
+      - Check for proper exception handling
+      - Verify SAML security best practices
+      - Ensure proper logging
+      - Check for null pointer safety
+      - Verify thread safety in servlet code
+
+  - path: "src/main/resources/**/*"
+    instructions: |
+      - Verify configuration security
+      - Check for sensitive data exposure
+      - Ensure proper logging configuration
+
+  - path: "pom.xml"
+    instructions: |
+      - Check for dependency vulnerabilities
+      - Verify version compatibility
+      - Ensure proper dependency management
+
+  - path: "src/main/webapp/**/*"
+    instructions: |
+      - Check for XSS vulnerabilities
+      - Verify proper SAML handling
+      - Ensure secure configuration
+
+# Chat settings
+chat:
+  auto_reply: true
+
+# Code quality checks
+checks:
+  # Security checks
+  security:
+    enabled: true
+    severity: high
+
+  # Code smell detection
+  code_smell:
+    enabled: true
+
+  # Best practices
+  best_practices:
+    enabled: true
+
+  # Performance issues
+  performance:
+    enabled: true
+
+  # Documentation
+  documentation:
+    enabled: true
+
+# Files to ignore
+ignore:
+  - "target/**"
+  - "*.class"
+  - "*.jar"
+  - "*.war"
+  - ".mvn/**"
+  - ".git/**"
+  - "certificates/**"
+
+# Knowledge base paths
+knowledge_base:
+  - "README.md"
+  - "pom.xml"
+  - "src/main/java/**/*.java"
+
+# Custom rules for SAML/OpenSAML
+custom_rules:
+  - id: saml-validation
+    description: "Ensure SAML responses are properly validated"
+    pattern: "Response.*process"
+    severity: high
+    message: "SAML responses must be validated for signature and integrity"
+
+  - id: encryption-check
+    description: "Verify encryption is properly implemented"
+    pattern: "Encrypter|Decrypter"
+    severity: high
+    message: "Ensure encryption keys are securely managed"
+
+  - id: servlet-security
+    description: "Check servlet security configuration"
+    pattern: "doGet|doPost"
+    severity: medium
+    message: "Verify proper authentication and authorization in servlets"
+
+# PR labels
+labels:
+  - "security"
+  - "saml"
+  - "java"
+  - "maven"
+
+# Tone and style
+tone_instructions: |
+  - Be concise and constructive
+  - Focus on security and SAML best practices
+  - Provide actionable suggestions
+  - Use Japanese for comments when appropriate
+  - Highlight potential security vulnerabilities
+  - Suggest improvements for code maintainability
