@@ -10,7 +10,7 @@
     <packaging>war</packaging>
 
     <properties>
-        <opensaml.version>5.1.2</opensaml.version>
+        <opensaml.version>5.1.6</opensaml.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
