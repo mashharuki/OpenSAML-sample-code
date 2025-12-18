@@ -195,10 +195,9 @@ public class AccessFilter implements Filter {
 				.setSignatureSigningParameters(signatureSigningParameters);
 
 		// HTTP Redirect Bindingエンコーダーの設定
-		HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
+		HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder(httpServletResponse);
 
 		encoder.setMessageContext(context);
-		encoder.setHttpServletResponse(httpServletResponse);
 
 		try {
 			encoder.initialize();

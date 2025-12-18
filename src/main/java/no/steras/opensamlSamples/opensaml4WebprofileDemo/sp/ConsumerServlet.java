@@ -73,7 +73,7 @@ public class ConsumerServlet extends HttpServlet {
 		logger.info("Artifact received");
 		// リクエストからArtifactを構築
 		Artifact artifact = buildArtifactFromRequest(req);
-		logger.info("Artifact: " + artifact.getArtifact());
+		logger.info("Artifact: " + artifact.getValue());
 		// ArtifactResolveを構築
 		ArtifactResolve artifactResolve = buildArtifactResolve(artifact);
 		logger.info("Sending ArtifactResolve");
@@ -119,7 +119,7 @@ public class ConsumerServlet extends HttpServlet {
 		lifetimeSecurityHandler.setRequiredRule(true);
 
 		ReceivedEndpointSecurityHandler receivedEndpointSecurityHandler = new ReceivedEndpointSecurityHandler();
-		receivedEndpointSecurityHandler.setHttpServletRequest(request);
+		receivedEndpointSecurityHandler.setHttpServletRequestSupplier(() -> request);
 		List handlers = new ArrayList<MessageHandler>();
 		handlers.add(lifetimeSecurityHandler);
 		handlers.add(receivedEndpointSecurityHandler);
