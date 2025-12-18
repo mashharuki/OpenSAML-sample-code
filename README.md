@@ -1,14 +1,20 @@
-# OpenSAML-sample-code
-Here I collect all code samples for OpenSAML from my books and my blog [https://blog.samlsecurity.com/](https://blog.samlsecurity.com/?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=main)
+# Demo of SP and IdP interacting using OpenSAML 4
+This code shows a simulation of how a SP and a IdP might communicate using SAML. Variations on this demo is used exensivley in the books [A Guide to OpenSAML V2](https://payhip.com/b/odEY?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=getting-started-authn) and [A Guide to OpenSAML V3](https://payhip.com/b/41Tw?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=getting-started-authn).
 
-These are the current samples in the collection
+The demo code sets up several servlets acting as different endpoints on SP, IdP and business application.
 
-* [Getting started with OpenSAML 4 and building AuthnRequest](getting-started-authnrequest) 
-* [Complete demo of SP and IdP interacting with OpenSAML 4](opensaml4-webprofile-demo)
-* [Sending and receiving messages using HTTP Redirect](opensaml-http-redirect)
-* [Sending and receiving messages using HTTP Post](opensaml-http-post)
-* [OpenSAML 4 signing and signature verification](opensaml-signing-and-verification)
-* [OpenSAML 4 prettyprinting OpenSAML objects](opensaml-pretty-print)
-* [Exception thrown when OpenSAML 4 not initialized](no-bootstraping-opensaml-v4)
-* [Exception thrown when OpenSAML 3 not initialized](no-bootstraping-opensaml-v3)
-* [Getting started with OpenSAML 3](getting-started-opensamlv3) 
+The demo acts a good overview guide to OpenSAML demonstrating:
+* Building, singing and sending a AuthnRequest using HTTP Redirect binding
+* Parsing and verifying signatures on AuthnRequest
+* Sending a Response message using the Artifact binding
+* Encrypting and decryoting a Assertion
+
+## Runing the code
+Clone the code, navigate to the folder for this sample and run: 
+```
+mvn tomcat:run
+```
+
+Then open a browser and navigate to http://localhost:8080/opensaml4-webprofile-demo/app/appservlet
+
+All SAML messages used during the communication are logged to the console.
