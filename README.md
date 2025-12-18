@@ -1,20 +1,26 @@
-# Demo of SP and IdP interacting using OpenSAML 4
-This code shows a simulation of how a SP and a IdP might communicate using SAML. Variations on this demo is used exensivley in the books [A Guide to OpenSAML V2](https://payhip.com/b/odEY?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=getting-started-authn) and [A Guide to OpenSAML V3](https://payhip.com/b/41Tw?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=getting-started-authn).
+# OpenSAML 4を使用したSPとIdPの連携デモ
 
-The demo code sets up several servlets acting as different endpoints on SP, IdP and business application.
+このコードは、SAMLを使用してSPとIdPがどのように通信するかをシミュレートするものです。
 
-The demo acts a good overview guide to OpenSAML demonstrating:
-* Building, singing and sending a AuthnRequest using HTTP Redirect binding
-* Parsing and verifying signatures on AuthnRequest
-* Sending a Response message using the Artifact binding
-* Encrypting and decryoting a Assertion
+このデモのバリエーションは、[A Guide to OpenSAML V2](https://payhip.com/b/odEY?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=getting-started-authn)および[A Guide to OpenSAML V3](https://payhip.com/b/41Tw?utm_source=github&utm_medium=link&utm_campaign=opensaml_samples_collection&utm_content=getting-started-authn)の書籍で広く使用されています。
 
-## Runing the code
-Clone the code, navigate to the folder for this sample and run: 
+このデモコードは、SP、IdP、およびビジネスアプリケーション上の異なるエンドポイントとして機能する複数のサーブレットを設定します。
+
+このデモは、OpenSAMLの優れた概要ガイドとして機能し、以下を実証します：
+
+* HTTP Redirectバインディングを使用したAuthnRequestの構築、署名、送信
+* AuthnRequestの署名の解析と検証
+* Artifactバインディングを使用したResponseメッセージの送信
+* Assertionの暗号化と復号化
+
+## コードの実行
+
+コードをクローンし、このサンプルのフォルダに移動して、次のコマンドを実行します：
+
 ```
 mvn tomcat:run
 ```
 
-Then open a browser and navigate to http://localhost:8080/opensaml4-webprofile-demo/app/appservlet
+その後、ブラウザを開いて http://localhost:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
 
-All SAML messages used during the communication are logged to the console.
+通信中に使用されるすべてのSAMLメッセージがコンソールにログ出力されます。
