@@ -71,7 +71,8 @@ public class ArtifactResolutionServlet extends HttpServlet {
 			throws ServletException, IOException {
 		logger.debug("recieved artifactResolve:");
 		// アーティファクト解決リクエストのデコード
-		HTTPSOAP11Decoder decoder = new HTTPSOAP11Decoder(req);
+		HTTPSOAP11Decoder decoder = new HTTPSOAP11Decoder();
+		decoder.setHttpServletRequestSupplier(() -> req);
 
 		try {
 			BasicParserPool parserPool = new BasicParserPool();
@@ -90,7 +91,8 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		MessageContext context = new MessageContext();
 		context.setMessage(artifactResponse);
 		// アーティファクト解決レスポンスのエンコードと送信
-		HTTPSOAP11Encoder encoder = new HTTPSOAP11Encoder(resp);
+		HTTPSOAP11Encoder encoder = new HTTPSOAP11Encoder();
+		encoder.setHttpServletResponseSupplier(() -> resp);
 		encoder.setMessageContext(context);
 
 		try {
