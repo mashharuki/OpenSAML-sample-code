@@ -1,0 +1,141 @@
+# CodeRabbit Configuration for OpenSAML Sample Code
+# 言語設定: 日本語でレビューを実施
+language: ja
+
+reviews:
+  # 自動レビューを有効化
+  auto_review:
+    enabled: true
+    drafts: false
+
+  # 重大度の高い問題に対して変更を要求
+  request_changes_workflow: true
+
+  # 高レベルのサマリーを表示
+  high_level_summary: true
+
+  # レビューレベルのサマリー（ポエム形式は無効）
+  poem: false
+
+  # レビュープロファイル
+  profile: chill
+
+  # PRページでウォークスルーを折りたたまない
+  collapse_walkthrough: false
+
+  # 軽微な変更の自動承認
+  auto_approve:
+    enabled: true
+    conditions:
+      - "files_count <= 2"
+      - "changes_count <= 50"
+      - "only_changes_to: ['*.md', '*.txt', '*.json', '*.yaml', '*.yml']"
+
+# パス別のレビュー指示
+path_instructions:
+  - path: "src/main/java/**/*.java"
+    instructions: |
+      - 適切な例外処理が実装されているか確認してください
+      - SAMLセキュリティのベストプラクティスに従っているか検証してください
+      - 適切なログ出力が実装されているか確認してください
+      - nullポインタ安全性をチェックしてください
+      - サーブレットコードでスレッドセーフティを検証してください
+
+  - path: "src/main/resources/**/*"
+    instructions: |
+      - 設定ファイルのセキュリティを検証してください
+      - 機密情報の漏洩がないか確認してください
+      - ログ設定が適切か確認してください
+
+  - path: "pom.xml"
+    instructions: |
+      - 依存関係の脆弱性をチェックしてください
+      - バージョンの互換性を確認してください
+      - 依存関係管理が適切か確認してください
+
+  - path: "src/main/webapp/**/*"
+    instructions: |
+      - XSS脆弱性がないか確認してください
+      - SAMLの処理が適切か検証してください
+      - セキュアな設定になっているか確認してください
+
+# チャット設定
+chat:
+  auto_reply: true
+
+# コード品質チェック
+checks:
+  # セキュリティチェック
+  security:
+    enabled: true
+    severity: high
+
+  # コードスメル検出
+  code_smell:
+    enabled: true
+
+  # ベストプラクティス
+  best_practices:
+    enabled: true
+
+  # パフォーマンス問題
+  performance:
+    enabled: true
+
+  # ドキュメンテーション
+  documentation:
+    enabled: true
+
+# 無視するファイル
+ignore:
+  - "target/**"
+  - "*.class"
+  - "*.jar"
+  - "*.war"
+  - ".mvn/**"
+  - ".git/**"
+  - "certificates/**"
+
+# ナレッジベースパス
+knowledge_base:
+  - "README.md"
+  - "pom.xml"
+  - "src/main/java/**/*.java"
+
+# SAML/OpenSAML用カスタムルール
+custom_rules:
+  - id: saml-validation
+    description: "SAML応答の適切な検証を確認"
+    pattern: "Response.*process"
+    severity: high
+    message: "SAML応答は署名と整合性を検証する必要があります"
+
+  - id: encryption-check
+    description: "暗号化の適切な実装を検証"
+    pattern: "Encrypter|Decrypter"
+    severity: high
+    message: "暗号化キーが安全に管理されているか確認してください"
+
+  - id: servlet-security
+    description: "サーブレットのセキュリティ設定を確認"
+    pattern: "doGet|doPost"
+    severity: medium
+    message: "サーブレットで適切な認証と認可が実装されているか確認してください"
+
+# PRラベル
+labels:
+  - "security"
+  - "saml"
+  - "java"
+  - "maven"
+
+# トーンとスタイル
+tone_instructions: |
+  すべてのレビューコメントは日本語で記載してください。
+  以下の点に注意してレビューを実施してください：
+  - 簡潔で建設的なフィードバックを提供する
+  - セキュリティとSAMLのベストプラクティスに焦点を当てる
+  - 実行可能な改善提案を行う
+  - 潜在的なセキュリティ脆弱性を強調する
+  - コードの保守性向上のための提案を行う
+  - 丁寧で分かりやすい日本語を使用する
