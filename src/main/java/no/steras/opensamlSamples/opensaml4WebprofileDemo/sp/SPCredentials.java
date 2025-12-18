@@ -1,8 +1,8 @@
 package no.steras.opensamlSamples.opensaml4WebprofileDemo.sp;
 
-import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
-import net.shibboleth.utilities.java.support.resolver.Criterion;
-import net.shibboleth.utilities.java.support.resolver.ResolverException;
+import net.shibboleth.shared.resolver.CriteriaSet;
+import net.shibboleth.shared.resolver.Criterion;
+import net.shibboleth.shared.resolver.ResolverException;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.impl.KeyStoreCredentialResolver;

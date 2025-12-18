@@ -7,14 +7,14 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.core.config.InitializationException;
@@ -44,9 +44,9 @@ import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.xml.BasicParserPool;
-import net.shibboleth.utilities.java.support.xml.ParserPool;
+import net.shibboleth.shared.component.ComponentInitializationException;
+import net.shibboleth.shared.xml.impl.BasicParserPool;
+import net.shibboleth.shared.xml.ParserPool;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.OpenSAMLUtils;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.IDPConstants;
 

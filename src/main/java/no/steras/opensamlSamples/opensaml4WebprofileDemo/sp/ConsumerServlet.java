@@ -6,10 +6,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.schema.XSString;
@@ -51,8 +51,8 @@ import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.httpclient.HttpClientBuilder;
+import net.shibboleth.shared.component.ComponentInitializationException;
+import net.shibboleth.shared.httpclient.HttpClientBuilder;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.OpenSAMLUtils;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.IDPConstants;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.IDPCredentials;

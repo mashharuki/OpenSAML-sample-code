@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.xml.security.utils.EncryptionConstants;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -51,8 +51,8 @@ import org.opensaml.xmlsec.signature.support.Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.xml.BasicParserPool;
+import net.shibboleth.shared.component.ComponentInitializationException;
+import net.shibboleth.shared.xml.impl.BasicParserPool;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.OpenSAMLUtils;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.SPConstants;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.SPCredentials;
