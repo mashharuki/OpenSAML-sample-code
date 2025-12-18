@@ -18,10 +18,10 @@
 コードをクローンし、このサンプルのフォルダに移動して、次のコマンドを実行します：
 
 ```bash
-mvn tomcat:run
+mvn jetty:run
 ```
 
-その後、ブラウザを開いて http://localhost:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
+その後、ブラウザを開いて http://localhost:8080/opensaml5-webprofile-demo/app/appservlet にアクセスしてください。
 
 通信中に使用されるすべてのSAMLメッセージがコンソールにログ出力されます。
 
