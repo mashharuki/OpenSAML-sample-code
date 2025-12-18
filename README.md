@@ -13,6 +13,12 @@
 * Artifactバインディングを使用したResponseメッセージの送信
 * Assertionの暗号化と復号化
 
+## コードのビルド
+
+```bash
+mvn clean compile 
+```
+
 ## コードの実行
 
 コードをクローンし、このサンプルのフォルダに移動して、次のコマンドを実行します：
@@ -21,7 +27,7 @@
 mvn tomcat:run
 ```
 
-その後、ブラウザを開いて http://localhost:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
+その後、ブラウザを開いて http://127.0.0.1:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
 
 通信中に使用されるすべてのSAMLメッセージがコンソールにログ出力されます。
 
