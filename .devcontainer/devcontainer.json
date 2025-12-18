@@ -1,10 +1,10 @@
 {
   "name": "OpenSAML Development Environment",
-  "image": "mcr.microsoft.com/devcontainers/java:17",
+  "image": "mcr.microsoft.com/devcontainers/java:21",
 
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "17",
+      "version": "21",
       "installMaven": "true",
       "mavenVersion": "3.9"
     },
@@ -32,7 +32,7 @@
         "java.server.launchMode": "Standard",
         "java.compile.nullAnalysis.mode": "automatic",
         "maven.executable.path": "/usr/local/sdkman/candidates/maven/current/bin/mvn",
-        "java.home": "/usr/local/sdkman/candidates/java/17.0.9-tem",
+        "java.home": "/usr/local/sdkman/candidates/java/21-tem",
         "files.exclude": {
           "**/.classpath": true,
           "**/.project": true,
