@@ -17,10 +17,13 @@
 
 コードをクローンし、このサンプルのフォルダに移動して、次のコマンドを実行します：
 
-```
+```bash
 mvn tomcat:run
 ```
 
 その後、ブラウザを開いて http://localhost:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
 
 通信中に使用されるすべてのSAMLメッセージがコンソールにログ出力されます。
+
+## 参考文献
+- [DeepWiki](https://deepwiki.com/rasmusson/OpenSAML-sample-code)
