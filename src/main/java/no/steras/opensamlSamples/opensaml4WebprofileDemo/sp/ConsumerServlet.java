@@ -258,7 +258,13 @@ public class ConsumerServlet extends HttpServlet {
 
 					BasicHttpClientMessagePipeline pipeline = new BasicHttpClientMessagePipeline(encoder, decoder);
 
-					pipeline.setOutboundPayloadHandler(new SAMLOutboundProtocolMessageSigningHandler());
+					SAMLOutboundProtocolMessageSigningHandler signingHandler = new SAMLOutboundProtocolMessageSigningHandler();
+					try {
+						signingHandler.initialize();
+					} catch (ComponentInitializationException e) {
+						throw new SOAPException(e);
+					}
+					pipeline.setOutboundPayloadHandler(signingHandler);
 					return pipeline;
 				}
 			};
@@ -266,6 +272,7 @@ public class ConsumerServlet extends HttpServlet {
 			HttpClientBuilder clientBuilder = new HttpClientBuilder();
 
 			soapClient.setHttpClient(clientBuilder.buildClient());
+			soapClient.initialize();
 			soapClient.send(IDPConstants.ARTIFACT_RESOLUTION_SERVICE, context);
 
 			return (ArtifactResponse) context.getInboundMessageContext().getMessage();
