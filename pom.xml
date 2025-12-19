@@ -140,6 +140,7 @@
                         <contextPath>/opensaml5-webprofile-demo</contextPath>
                     </webApp>
                     <httpConnector>
+                        <host>0.0.0.0</host>
                         <port>8080</port>
                     </httpConnector>
                 </configuration>
