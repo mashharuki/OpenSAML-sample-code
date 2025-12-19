@@ -24,7 +24,7 @@ mvn clean compile
 コードをクローンし、このサンプルのフォルダに移動して、次のコマンドを実行します：
 
 ```bash
-mvn tomcat:run
+mvn jetty:run
 ```
 
 その後、ブラウザを開いて http://127.0.0.1:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
