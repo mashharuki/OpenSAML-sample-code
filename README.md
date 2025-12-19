@@ -76,6 +76,68 @@ src/main/java/no/steras/opensamlSamples/opensaml4WebprofileDemo/
 | `/idp/singleSignOnService` | IdP シングルサインオンエンドポイント |
 | `/sp/consumer` | SP Assertion Consumer Service |
 | `/idp/artifactResolutionService` | Artifact 解決エンドポイント |
+| `/actuator/health` | ヘルスチェックエンドポイント |
+
+## Docker で実行
+
+### ローカルでビルド＆実行
+
+```bash
+# イメージをビルド
+docker build -t opensaml5-demo .
+
+# コンテナを実行
+docker run -p 8080:8080 opensaml5-demo
+```
+
+アクセス: http://localhost:8080/opensaml5-webprofile-demo/app/appservlet
+
+### ヘルスチェック
+
+```bash
+curl http://localhost:8080/opensaml5-webprofile-demo/actuator/health
+```
+
+## AWS Lambda へのデプロイ (Lambda Web Adapter)
+
+このアプリケーションは [Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) に対応しており、AWS Lambda 上で実行できます。
+
+### ECR へプッシュ
+
+```bash
+# AWS アカウント ID とリージョンを設定
+AWS_ACCOUNT_ID=123456789012
+AWS_REGION=ap-northeast-1
+
+# ECR にログイン
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+# ECR リポジトリを作成（初回のみ）
+aws ecr create-repository --repository-name opensaml5-demo --region $AWS_REGION
+
+# イメージをビルド
+docker build -t opensaml5-demo .
+
+# タグ付け
+docker tag opensaml5-demo:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/opensaml5-demo:latest
+
+# プッシュ
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/opensaml5-demo:latest
+```
+
+### Lambda 関数の作成
+
+AWS Console または AWS CLI で Lambda 関数を作成し、コンテナイメージを指定します。
+
+```bash
+aws lambda create-function \
+  --function-name opensaml5-demo \
+  --package-type Image \
+  --code ImageUri=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/opensaml5-demo:latest \
+  --role arn:aws:iam::$AWS_ACCOUNT_ID:role/lambda-execution-role \
+  --memory-size 512 \
+  --timeout 30
+```
 
 ## 参考文献
 - [DeepWiki](https://deepwiki.com/rasmusson/OpenSAML-sample-code)
