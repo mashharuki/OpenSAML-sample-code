@@ -27,7 +27,7 @@ mvn clean compile
 mvn jetty:run
 ```
 
-その後、ブラウザを開いて http://127.0.0.1:8080/opensaml4-webprofile-demo/app/appservlet にアクセスしてください。
+その後、ブラウザを開いて http://127.0.0.1:8080/opensaml5-webprofile-demo/app/appservlet にアクセスしてください。
 
 通信中に使用されるすべてのSAMLメッセージがコンソールにログ出力されます。
 

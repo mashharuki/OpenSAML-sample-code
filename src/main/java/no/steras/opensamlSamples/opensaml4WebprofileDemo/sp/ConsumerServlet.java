@@ -117,9 +117,19 @@ public class ConsumerServlet extends HttpServlet {
 		lifetimeSecurityHandler.setClockSkew(Duration.ofMillis(1000));
 		lifetimeSecurityHandler.setMessageLifetime(Duration.ofMillis(2000));
 		lifetimeSecurityHandler.setRequiredRule(true);
+		try {
+			lifetimeSecurityHandler.initialize();
+		} catch (ComponentInitializationException e) {
+			throw new RuntimeException(e);
+		}
 
 		ReceivedEndpointSecurityHandler receivedEndpointSecurityHandler = new ReceivedEndpointSecurityHandler();
 		receivedEndpointSecurityHandler.setHttpServletRequestSupplier(() -> request);
+		try {
+			receivedEndpointSecurityHandler.initialize();
+		} catch (ComponentInitializationException e) {
+			throw new RuntimeException(e);
+		}
 		List handlers = new ArrayList<MessageHandler>();
 		handlers.add(lifetimeSecurityHandler);
 		handlers.add(receivedEndpointSecurityHandler);
@@ -189,6 +199,10 @@ public class ConsumerServlet extends HttpServlet {
 	 */
 	private void redirectToGotoURL(HttpServletRequest req, HttpServletResponse resp) {
 		String gotoURL = (String) req.getSession().getAttribute(SPConstants.GOTO_URL_SESSION_ATTRIBUTE);
+		if (gotoURL == null) {
+			logger.warn("No GOTO_URL found in session, redirecting to default application page");
+			gotoURL = req.getContextPath() + "/app/appservlet";
+		}
 		logger.info("Redirecting to requested URL: " + gotoURL);
 		try {
 			// リダイレクト
