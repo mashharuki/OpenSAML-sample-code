@@ -83,7 +83,7 @@ src/main/java/no/steras/opensamlSamples/opensaml4WebprofileDemo/
 ### ローカルでビルド＆実行
 
 ```bash
-# イメージをビルド
+# イメージをビルド(事前にECRにログインする必要あり)
 docker build -t opensaml5-demo .
 
 # コンテナを実行

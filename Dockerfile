@@ -1,26 +1,21 @@
 # ============================================
 # Stage 1: Build
 # ============================================
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
+# Copy pom.xml
 COPY pom.xml ./
-COPY .mvn .mvn
-COPY mvnw ./
-
-# Make mvnw executable
-RUN chmod +x mvnw
 
 # Download dependencies (cached layer)
-RUN ./mvnw dependency:go-offline -B || true
+RUN mvn dependency:go-offline -B || true
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # ============================================
 # Stage 2: Runtime (Lambda Web Adapter)
@@ -33,7 +28,7 @@ WORKDIR /app
 RUN apk add --no-cache curl
 
 # Copy Lambda Web Adapter
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt/extensions/lambda-adapter
 
 # Copy the built JAR
 COPY --from=builder /app/target/*.jar app.jar
