@@ -12,6 +12,10 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 @ServletComponentScan
 public class Application {
 
+    /**
+     * エントリーメソッド
+     * @param args
+     */
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
