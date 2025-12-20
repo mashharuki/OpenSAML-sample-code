@@ -53,6 +53,16 @@ export class CdkStack extends cdk.Stack {
       description: 'SAML Spring Boot application with Lambda Web Adapter',
     });
 
+    // Enable Lambda Function URL
+    const functionUrl = samlFunction.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+      cors: {
+        allowedOrigins: ['*'],
+        allowedMethods: [lambda.HttpMethod.ALL],
+        allowedHeaders: ['*'],
+      },
+    });
+
     // HTTP API Gatewayリソース
     const httpApi = new apigatewayv2.HttpApi(this, 'SamlHttpApi', {
       apiName: 'saml-spring-boot-api',
@@ -102,6 +112,11 @@ export class CdkStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'LambdaFunctionArn', {
       value: samlFunction.functionArn,
       description: 'Lambda function ARN',
+    });
+
+    new cdk.CfnOutput(this, 'FunctionUrl', {
+      value: functionUrl.url,
+      description: 'Lambda Function URL',
     });
   }
 }
