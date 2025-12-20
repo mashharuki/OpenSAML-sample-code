@@ -106,45 +106,34 @@ docker run -p 8080:8080 opensaml5-demo
 curl http://localhost:8080/opensaml5-webprofile-demo/actuator/health
 ```
 
-## AWS Lambda へのデプロイ (Lambda Web Adapter)
+## AWS へのデプロイ (AWS CDKを活用)
 
-このアプリケーションは [Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) に対応しており、AWS Lambda 上で実行できます。
-
-### ECR へプッシュ
+**cdk**ディレクトリ配下で実行してください。
 
 ```bash
-# AWS アカウント ID とリージョンを設定
-AWS_ACCOUNT_ID=123456789012
-AWS_REGION=ap-northeast-1
-
-# ECR にログイン
-aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
-# ECR リポジトリを作成（初回のみ）
-aws ecr create-repository --repository-name opensaml5-demo --region $AWS_REGION
-
-# イメージをビルド
-docker build -t opensaml5-demo .
-
-# タグ付け
-docker tag opensaml5-demo:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/opensaml5-demo:latest
-
-# プッシュ
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/opensaml5-demo:latest
+bun run deploy
 ```
 
-### Lambda 関数の作成
-
-AWS Console または AWS CLI で Lambda 関数を作成し、コンテナイメージを指定します。
+BASE_URLを環境変数として埋め込みたいので以下のオプションをつけて2回目を実行する
 
 ```bash
-aws lambda create-function \
-  --function-name opensaml5-demo \
-  --package-type Image \
-  --code ImageUri=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/opensaml5-demo:latest \
-  --role arn:aws:iam::$AWS_ACCOUNT_ID:role/lambda-execution-role \
-  --memory-size 512 \
-  --timeout 30
+cdk deploy -c baseUrl=https://xxxxx.execute-api.ap-northeast-1.amazonaws.com
+```
+
+### デプロイ後のヘルスチェック
+
+```bash
+curl <CdkStack.ApiEndpoint>/opensaml5-webprofile-demo/actuator/health
+```
+
+### アプリへのアクセス
+
+<CdkStack.ApiEndpoint>/opensaml5-webprofile-demo/app/appservlets
+
+## AWSのリソースデストロイ
+
+```bash
+bun run destroy '*' --force
 ```
 
 ## 参考文献
