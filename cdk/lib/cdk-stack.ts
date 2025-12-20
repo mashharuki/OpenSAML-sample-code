@@ -10,6 +10,10 @@ export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // BASE_URL for SAML endpoints (set via context or use placeholder for initial deploy)
+    // Usage: cdk deploy -c baseUrl=https://your-api-gateway-url.execute-api.region.amazonaws.com
+    const baseUrl = this.node.tryGetContext('baseUrl') || '';
+
     // Build Docker image for Lambda
     const dockerImage = new ecr_assets.DockerImageAsset(this, 'SamlSpringBootImage', {
       directory: path.join(__dirname, '../../backend'),
@@ -31,6 +35,8 @@ export class CdkStack extends cdk.Stack {
         ASYNC_INIT: 'true',
         // Spring Boot settings
         JAVA_OPTS: '-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0',
+        // SAML endpoint base URL (required for SAML redirects)
+        BASE_URL: baseUrl,
       },
       description: 'SAML Spring Boot application with Lambda Web Adapter',
     });
