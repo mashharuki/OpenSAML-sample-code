@@ -23,6 +23,8 @@ mvn clean package
 
 コードをクローンし、このサンプルのフォルダに移動して、次のコマンドを実行します：
 
+以降のコマンドは、**backend**ディレクトリ配下で実行してください。
+
 ### Spring Boot で実行（推奨）
 
 ```bash
@@ -82,7 +84,13 @@ src/main/java/no/steras/opensamlSamples/opensaml4WebprofileDemo/
 
 ### ローカルでビルド＆実行
 
+以降のコマンドは、**backend**ディレクトリ配下で実行してください。
+
 ```bash
+
+# ECR にログイン
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
 # イメージをビルド(事前にECRにログインする必要あり)
 docker build -t opensaml5-demo .
 
