@@ -1,4 +1,4 @@
-# OpenSAML 4を使用したSPとIdPの連携デモ
+# OpenSAML5を使用したSPとIdPの連携デモ
 
 このコードは、SAMLを使用してSPとIdPがどのように通信するかをシミュレートするものです。
 
@@ -117,7 +117,7 @@ bun run deploy
 BASE_URLを環境変数として埋め込みたいので以下のオプションをつけて2回目を実行する
 
 ```bash
-cdk deploy -c baseUrl=https://xxxxx.execute-api.ap-northeast-1.amazonaws.com
+bun run deploy -c baseUrl=https://xxxxx.execute-api.ap-northeast-1.amazonaws.com
 ```
 
 ### デプロイ後のヘルスチェック
