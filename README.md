@@ -133,7 +133,7 @@ curl <CdkStack.ApiEndpoint>/opensaml5-webprofile-demo/actuator/health
 ## AWSのリソースデストロイ
 
 ```bash
-bun run destroy '*' --force
+bun run destroy --force
 ```
 
 ## 参考文献
