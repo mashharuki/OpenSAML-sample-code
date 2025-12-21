@@ -87,7 +87,9 @@ src/main/java/no/steras/opensamlSamples/opensaml4WebprofileDemo/
 以降のコマンドは、**backend**ディレクトリ配下で実行してください。
 
 ```bash
-
+# アカウントIDとリージョンを環境変数化
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export AWS_REGION=$(aws configure get region)
 # ECR にログイン
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 

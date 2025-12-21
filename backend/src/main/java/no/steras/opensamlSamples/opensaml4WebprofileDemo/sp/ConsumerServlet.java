@@ -70,6 +70,7 @@ public class ConsumerServlet extends HttpServlet {
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
+		logger.info("ConsumerServlet.doGet invoked. Request URL: {}", req.getRequestURL());
 		logger.info("Artifact received");
 		// リクエストからArtifactを構築
 		Artifact artifact = buildArtifactFromRequest(req);
@@ -101,6 +102,13 @@ public class ConsumerServlet extends HttpServlet {
 
 		setAuthenticatedSession(req);
 		redirectToGotoURL(req, resp);
+	}
+
+	@Override
+	protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
+			throws ServletException, IOException {
+		logger.info("ConsumerServlet.doPost invoked. Request URL: {}", req.getRequestURL());
+		doGet(req, resp);
 	}
 
 	/**

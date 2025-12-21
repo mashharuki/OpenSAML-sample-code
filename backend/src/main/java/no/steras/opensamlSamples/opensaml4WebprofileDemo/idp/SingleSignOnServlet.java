@@ -36,9 +36,10 @@ public class SingleSignOnServlet extends HttpServlet {
      */
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+        String redirectUrl = SPConstants.ASSERTION_CONSUMER_SERVICE + "?SAMLart=AAQAAMFbLinlXaCM%2BFIxiDwGOLAy2T71gbpO7ZhNzAgEANlB90ECfpNEVLg%3D";
+        logger.info("User authenticated, redirecting to SP: " + redirectUrl);
         // 実際の認証処理は省略し、認証成功したものとしてSAMLアーティファクトをSPに送信する
-        logger.info("User authenticated, sending SAML Artifact to SP");
-        resp.sendRedirect(SPConstants.ASSERTION_CONSUMER_SERVICE + "?SAMLart=AAQAAMFbLinlXaCM%2BFIxiDwGOLAy2T71gbpO7ZhNzAgEANlB90ECfpNEVLg%3D");
+        resp.sendRedirect(redirectUrl);
     }
 
 
