@@ -1,52 +1,52 @@
 # ============================================
-# Stage 1: Build
+# ステージ 1: ビルド
 # ============================================
 FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
-# Copy pom.xml
+# pom.xml をコピー
 COPY pom.xml ./
 
-# Download dependencies (cached layer)
+# 依存関係をダウンロード (キャッシュレイヤー)
 RUN mvn dependency:go-offline -B || true
 
-# Copy source code
+# ソースコードをコピー
 COPY src ./src
 
-# Build the application
+# アプリケーションをビルド
 RUN mvn clean package -DskipTests -B
 
 # ============================================
-# Stage 2: Runtime (Lambda Web Adapter)
+# ステージ 2: 実行環境 (Lambda Web Adapter)
 # ============================================
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Install curl for health checks
+# ヘルスチェック用の curl をインストール
 RUN apk add --no-cache curl
 
-# Copy Lambda Web Adapter
+# Lambda Web Adapter をコピー
 COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt/extensions/lambda-adapter
 
-# Copy the built JAR
+# ビルドされた JAR ファイルをコピー
 COPY --from=builder /app/target/*.jar app.jar
 
-# Environment variables for Lambda Web Adapter
+# Lambda Web Adapter 用の環境変数
 ENV PORT=8080
 ENV READINESS_CHECK_PATH=/opensaml5-webprofile-demo/actuator/health
 ENV ASYNC_INIT=true
 
-# Spring Boot configuration
+# Spring Boot の設定
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-# Expose port
+# ポートを開放
 EXPOSE 8080
 
-# Health check for local Docker
+# ローカル Docker 用のヘルスチェック
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8080/opensaml5-webprofile-demo/actuator/health || exit 1
 
-# Run the application
+# アプリケーションを実行
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
