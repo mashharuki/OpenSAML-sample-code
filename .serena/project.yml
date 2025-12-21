@@ -1,0 +1,12 @@
+project_name: "OpenSAML-sample-code"
+languages:
+  - "java"
+exclude:
+  - ".git"
+  - ".vscode"
+  - ".devcontainer"
+  - "**/target"
+  - "**/node_modules"
+  - "**/dist"
+  - ".coderabbit.yaml"
+  - "memo_log.md"
