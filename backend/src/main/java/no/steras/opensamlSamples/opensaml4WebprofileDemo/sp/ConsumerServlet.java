@@ -70,30 +70,38 @@ public class ConsumerServlet extends HttpServlet {
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
-		logger.info("ConsumerServlet.doGet invoked. Request URL: {}", req.getRequestURL());
-		logger.info("Artifact received");
+		logger.info("ConsumerServlet.doGetが呼び出されました。リクエストURL: {}", req.getRequestURL());
+		
 		// リクエストからArtifactを構築
 		Artifact artifact = buildArtifactFromRequest(req);
-		logger.info("Artifact: " + artifact.getValue());
+		logger.info("1. IdPからアーティファクトを受信しました: " + artifact.getValue());
+		
 		// ArtifactResolveを構築
 		ArtifactResolve artifactResolve = buildArtifactResolve(artifact);
-		logger.info("Sending ArtifactResolve");
-		logger.info("ArtifactResolve: ");
+		logger.info("2. アーティファクト {} に対してArtifactResolveリクエストを構築しました。", artifact.getValue());
+		logger.info("   ArtifactResolveの内容: ");
 		// ログ出力用に出力
 		OpenSAMLUtils.logSAMLObject(artifactResolve);
+		
 		// ArtifactResolve送信、ArtifactResponse受信
+		logger.info("3. IdPへArtifactResolveを送信します (バックチャネル通信)...");
 		ArtifactResponse artifactResponse = sendAndReceiveArtifactResolve(artifactResolve, resp);
-		logger.info("ArtifactResponse received");
-		logger.info("ArtifactResponse: ");
+		logger.info("4. IdPからArtifactResponseを受信しました。");
+		logger.info("   ArtifactResponseの内容: ");
 		OpenSAMLUtils.logSAMLObject(artifactResponse);
 
 		validateDestinationAndLifetime(artifactResponse, req);
+		logger.info("5. ArtifactResponseの検証 (Destinationおよび有効期限) が完了しました。");
+
         // アサーションを取得、復号化、署名検証
 		EncryptedAssertion encryptedAssertion = getEncryptedAssertion(artifactResponse);
 		Assertion assertion = decryptAssertion(encryptedAssertion);
+		logger.info("6. アサーションの復号に成功しました。");
+
 		// 署名検証
 		verifyAssertionSignature(assertion);
-		logger.info("Decrypted Assertion: ");
+		logger.info("7. アサーションの署名検証に成功しました。");
+		logger.info("   復号されたアサーションの内容: ");
 		OpenSAMLUtils.logSAMLObject(assertion);
 
 		logAssertionAttributes(assertion);
@@ -101,13 +109,14 @@ public class ConsumerServlet extends HttpServlet {
 		logAuthenticationMethod(assertion);
 
 		setAuthenticatedSession(req);
+		logger.info("8. ユーザーセッションを認証済みとしてマークしました。");
 		redirectToGotoURL(req, resp);
 	}
 
 	@Override
 	protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
-		logger.info("ConsumerServlet.doPost invoked. Request URL: {}", req.getRequestURL());
+		logger.info("ConsumerServlet.doPostが呼び出されました。リクエストURL: {}", req.getRequestURL());
 		doGet(req, resp);
 	}
 
@@ -179,7 +188,7 @@ public class ConsumerServlet extends HttpServlet {
 	private void verifyAssertionSignature(Assertion assertion) {
 
 		if (!assertion.isSigned()) {
-			throw new RuntimeException("The SAML Assertion was not signed");
+			throw new RuntimeException("SAMLアサーションに署名がありません");
 		}
 
 		try {
@@ -188,7 +197,7 @@ public class ConsumerServlet extends HttpServlet {
 
 			SignatureValidator.validate(assertion.getSignature(), IDPCredentials.getCredential());
 
-			logger.info("SAML Assertion signature verified");
+			logger.info("SAMLアサーションの署名を検証しました");
 		} catch (SignatureException e) {
 			e.printStackTrace();
 		}
@@ -208,10 +217,10 @@ public class ConsumerServlet extends HttpServlet {
 	private void redirectToGotoURL(HttpServletRequest req, HttpServletResponse resp) {
 		String gotoURL = (String) req.getSession().getAttribute(SPConstants.GOTO_URL_SESSION_ATTRIBUTE);
 		if (gotoURL == null) {
-			logger.warn("No GOTO_URL found in session, redirecting to default application page");
+			logger.warn("セッションに戻り先URL(GOTO_URL)が見つかりません。デフォルトのアプリケーションページにリダイレクトします。");
 			gotoURL = req.getContextPath() + "/app/appservlet";
 		}
-		logger.info("Redirecting to requested URL: " + gotoURL);
+		logger.info("要求されたURLにリダイレクトします: " + gotoURL);
 		try {
 			// リダイレクト
 			resp.sendRedirect(gotoURL);
@@ -224,19 +233,19 @@ public class ConsumerServlet extends HttpServlet {
 	 * 認証方法のログ出力
 	 */
 	private void logAuthenticationMethod(Assertion assertion) {
-		logger.info("Authentication method: "
+		logger.info("認証方式: "
 				+ assertion.getAuthnStatements().get(0).getAuthnContext().getAuthnContextClassRef().getURI());
 	}
 
 	private void logAuthenticationInstant(Assertion assertion) {
-		logger.info("Authentication instant: " + assertion.getAuthnStatements().get(0).getAuthnInstant());
+		logger.info("認証時刻: " + assertion.getAuthnStatements().get(0).getAuthnInstant());
 	}
 
 	private void logAssertionAttributes(Assertion assertion) {
 		for (Attribute attribute : assertion.getAttributeStatements().get(0).getAttributes()) {
-			logger.info("Attribute name: " + attribute.getName());
+			logger.info("属性名: " + attribute.getName());
 			for (XMLObject attributeValue : attribute.getAttributeValues()) {
-				logger.info("Attribute value: " + ((XSString) attributeValue).getValue());
+				logger.info("属性値: " + ((XSString) attributeValue).getValue());
 			}
 		}
 	}

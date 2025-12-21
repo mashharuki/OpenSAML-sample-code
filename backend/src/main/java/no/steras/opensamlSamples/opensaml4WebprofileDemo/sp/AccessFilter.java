@@ -71,7 +71,7 @@ public class AccessFilter implements Filter {
 			javaCryptoValidationInitializer.init();
 
 			for (Provider jceProvider : Security.getProviders()) {
-				logger.info(jceProvider.getInfo());
+				logger.info("JCEプロバイダー情報: {}", jceProvider.getInfo());
 			}
 
 			XMLObjectProviderRegistry registry = new XMLObjectProviderRegistry();
@@ -79,7 +79,7 @@ public class AccessFilter implements Filter {
 
 			registry.setParserPool(getParserPool());
 
-			logger.info("Initializing");
+			logger.info("OpenSAMLの初期化を開始します");
 			InitializationService.initialize();
 		} catch (InitializationException e) {
 			throw new RuntimeException("Initialization failed");
@@ -131,11 +131,15 @@ public class AccessFilter implements Filter {
 		HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 		HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
+		logger.info("AccessFilter.doFilter: リクエストをインターセプトしました。URL: {}", httpServletRequest.getRequestURL());
+
 		// セッションに認証情報が存在するかチェック
 		if (httpServletRequest.getSession().getAttribute(SPConstants.AUTHENTICATED_SESSION_ATTRIBUTE) != null) {
+			logger.info("セッションは既に認証済みです。通常の処理を続行します。");
 			// 認証済み：次のフィルターチェーンへ進む
 			chain.doFilter(request, response);
 		} else {
+			logger.info("セッションが未認証です。SAML認証フローを開始します。");
 			// 未認証：認証後の戻り先URLをセッションに保存し、IdPへリダイレクト
 			setGotoURLOnSession(httpServletRequest);
 			redirectUserForAuthentication(httpServletResponse);
@@ -206,10 +210,10 @@ public class AccessFilter implements Filter {
 		}
 
 		// AuthnRequestをログに出力（デバッグ用）
-		logger.info("AuthnRequest: ");
+		logger.info("AuthnRequestの内容(XML): ");
 		OpenSAMLUtils.logSAMLObject(authnRequest);
 
-		logger.info("Redirecting to IDP");
+		logger.info("IdPへリダイレクトします");
 		try {
 			encoder.encode();
 		} catch (MessageEncodingException e) {

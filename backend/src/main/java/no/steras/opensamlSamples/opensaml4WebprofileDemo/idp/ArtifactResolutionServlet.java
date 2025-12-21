@@ -69,7 +69,8 @@ public class ArtifactResolutionServlet extends HttpServlet {
 	@Override
 	protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
-		logger.debug("recieved artifactResolve:");
+		logger.info("ArtifactResolutionServlet.doPost: SPからArtifactResolveリクエストを受信しました。");
+		
 		// アーティファクト解決リクエストのデコード
 		HTTPSOAP11Decoder decoder = new HTTPSOAP11Decoder();
 		decoder.setHttpServletRequestSupplier(() -> req);
@@ -80,12 +81,14 @@ public class ArtifactResolutionServlet extends HttpServlet {
 			decoder.setParserPool(parserPool);
 			decoder.initialize();
 			decoder.decode();
+			logger.info("ArtifactResolutionServlet: リクエスト(ArtifactResolve)のデコードに成功しました。");
 		} catch (MessageDecodingException e) {
 			throw new RuntimeException(e);
 		} catch (ComponentInitializationException e) {
 			throw new RuntimeException(e);
 		}
 
+		logger.info("ArtifactResolutionServlet: アサーションを含むArtifactResponseを生成します...");
 		ArtifactResponse artifactResponse = buildArtifactResponse();
 
 		MessageContext context = new MessageContext();
@@ -100,6 +103,7 @@ public class ArtifactResolutionServlet extends HttpServlet {
 			encoder.prepareContext();
 			encoder.initialize();
 			encoder.encode();
+			logger.info("ArtifactResolutionServlet: ArtifactResponseをSPに返送しました。");
 		} catch (MessageEncodingException e) {
 			throw new RuntimeException(e);
 		} catch (ComponentInitializationException e) {
