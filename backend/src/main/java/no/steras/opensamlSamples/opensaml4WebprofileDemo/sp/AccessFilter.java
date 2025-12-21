@@ -51,45 +51,48 @@ import no.steras.opensamlSamples.opensaml4WebprofileDemo.OpenSAMLUtils;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.idp.IDPConstants;
 
 /**
- * アクセスフィルター
- * ユーザーをインターセプトし、未認証の場合はSAML認証を開始します。
- * このフィルターはSP（Service Provider）側で動作し、保護されたリソースへのアクセス時に
- * ユーザーがIdP（Identity Provider）で認証されているかをチェックします。
+ * Service Provider (SP) 側のアクセス制御フィルター。
+ * 
+ * 役割:
+ * 1. ユーザーのセッションが認証済みかどうかをチェック。
+ * 2. 未認証の場合、SAML 認証フローを開始 (AuthnRequest を作成して IdP へリダイレクト)。
+ * 3. 認証後の戻り先 URL をセッションに保存。
  */
 public class AccessFilter implements Filter {
 	private static Logger logger = LoggerFactory.getLogger(AccessFilter.class);
 
 	/**
-	 * フィルターの初期化
-	 * OpenSAMLライブラリとXMLパーサーを初期化します。
-	 * Java暗号化検証の初期化、セキュリティプロバイダーの登録、
-	 * XMLオブジェクトプロバイダーレジストリの設定を行います。
+	 * フィルター初期化時に OpenSAML のランタイム環境をセットアップします。
+	 * OpenSAML を使用する前に必ず `InitializationService.initialize()` を呼び出す必要があります。
 	 */
 	public void init(FilterConfig filterConfig) throws ServletException {
+		// Java の暗号化ライブラリが OpenSAML の要件を満たしているかチェック・初期化
 		JavaCryptoValidationInitializer javaCryptoValidationInitializer = new JavaCryptoValidationInitializer();
 		try {
 			javaCryptoValidationInitializer.init();
 
+			// デバッグ用: 利用可能なセキュリティプロバイダー（SunJCE等）をログ出力
 			for (Provider jceProvider : Security.getProviders()) {
 				logger.info("JCEプロバイダー情報: {}", jceProvider.getInfo());
 			}
 
+			// XMLオブジェクトの生成や解析に使用するレジストリの設定
 			XMLObjectProviderRegistry registry = new XMLObjectProviderRegistry();
 			ConfigurationService.register(XMLObjectProviderRegistry.class, registry);
 
+			// セキュアに設定された XML パーサープールを登録
 			registry.setParserPool(getParserPool());
 
-			logger.info("OpenSAMLの初期化を開始します");
+			logger.info("OpenSAML 5 の初期化を開始します...");
 			InitializationService.initialize();
 		} catch (InitializationException e) {
-			throw new RuntimeException("Initialization failed");
+			throw new RuntimeException("OpenSAML の初期化に失敗しました", e);
 		}
 	}
 
 	/**
-	 * XMLパーサープールの取得
-	 * セキュアなXML処理を行うためのパーサープールを構成します。
-	 * XXE（XML外部エンティティ）攻撃などを防ぐため、各種セキュリティ機能を有効化します。
+	 * XML 解析のためのパーサープールを構築します。
+	 * セキュリティ上の理由から、XXE 攻撃（外部実体参照）などを無効化した設定を行います。
 	 */
 	private static ParserPool getParserPool() {
 		BasicParserPool parserPool = new BasicParserPool();
@@ -101,6 +104,7 @@ public class AccessFilter implements Filter {
 		parserPool.setExpandEntityReferences(false);
 		parserPool.setXincludeAware(false);
 
+		// XXE 攻撃対策のための機能を明示的に設定
 		final Map<String, Boolean> features = new HashMap<String, Boolean>();
 		features.put("http://xml.org/sax/features/external-general-entities", Boolean.FALSE);
 		features.put("http://xml.org/sax/features/external-parameter-entities", Boolean.FALSE);
@@ -109,88 +113,81 @@ public class AccessFilter implements Filter {
 		features.put("http://javax.xml.XMLConstants/feature/secure-processing", Boolean.TRUE);
 
 		parserPool.setBuilderFeatures(features);
-
 		parserPool.setBuilderAttributes(new HashMap<String, Object>());
 
 		try {
 			parserPool.initialize();
 		} catch (ComponentInitializationException e) {
-			logger.error(e.getMessage(), e);
+			logger.error("ParserPool の初期化中にエラーが発生しました: " + e.getMessage(), e);
 		}
 
 		return parserPool;
 	}
 
 	/**
-	 * フィルター処理のメインメソッド
-	 * リクエストごとに呼び出され、ユーザーの認証状態をチェックします。
-	 * 認証済みの場合は次のフィルターチェーンへ進み、未認証の場合はIdPへリダイレクトします。
+	 * リクエストをインターセプトし、認証状態に応じた処理を行います。
 	 */
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 		HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
-		logger.info("AccessFilter.doFilter: リクエストをインターセプトしました。URL: {}", httpServletRequest.getRequestURL());
+		logger.info("AccessFilter: リクエスト受信 - URL: {}", httpServletRequest.getRequestURL());
 
-		// セッションに認証情報が存在するかチェック
+		// 1. セッションに認証済みフラグがあるか確認
 		if (httpServletRequest.getSession().getAttribute(SPConstants.AUTHENTICATED_SESSION_ATTRIBUTE) != null) {
-			logger.info("セッションは既に認証済みです。通常の処理を続行します。");
-			// 認証済み：次のフィルターチェーンへ進む
+			logger.info("セッション認証済み。リクエストを後続の処理（サーブレット等）へ渡します。");
 			chain.doFilter(request, response);
 		} else {
-			logger.info("セッションが未認証です。SAML認証フローを開始します。");
-			// 未認証：認証後の戻り先URLをセッションに保存し、IdPへリダイレクト
+			// 2. 未認証の場合は SAML 認証（SSO）を開始
+			logger.info("未認証。SAML AuthnRequest を生成し、IdP へリダイレクトします。");
+			
+			// 認証成功後に戻ってくるための URL をセッションに記憶
 			setGotoURLOnSession(httpServletRequest);
+			
+			// IdP へのリダイレクト処理を実行
 			redirectUserForAuthentication(httpServletResponse);
 		}
 	}
 
 	/**
-	 * 認証後の戻り先URLをセッションに保存
-	 * ユーザーが元々アクセスしようとしていたURLを記憶しておき、
-	 * IdPでの認証完了後にこのURLへリダイレクトします。
+	 * 認証後の戻り先 URL をセッションに保存します。
 	 */
 	private void setGotoURLOnSession(HttpServletRequest request) {
-		request.getSession().setAttribute(SPConstants.GOTO_URL_SESSION_ATTRIBUTE, request.getRequestURL().toString());
+		String currentUrl = request.getRequestURL().toString();
+		request.getSession().setAttribute(SPConstants.GOTO_URL_SESSION_ATTRIBUTE, currentUrl);
+		logger.debug("戻り先URLを保存しました: {}", currentUrl);
 	}
 
 	/**
-	 * ユーザーをIdPの認証ページへリダイレクト
-	 * AuthnRequestを構築し、ユーザーをIdPのシングルサインオンエンドポイントへリダイレクトします。
+	 * AuthnRequest を構築し、IdP へリダイレクト送信します。
 	 */
 	private void redirectUserForAuthentication(HttpServletResponse httpServletResponse) {
+		// 1. AuthnRequest オブジェクトの構築
 		AuthnRequest authnRequest = buildAuthnRequest();
+		
+		// 2. ブラウザ経由のリダイレクト送信を実行
 		redirectUserWithRequest(httpServletResponse, authnRequest);
-
 	}
 
 	/**
-	 * AuthnRequestを使ってユーザーをリダイレクト
-	 * HTTP Redirect Bindingを使用してAuthnRequestをIdPへ送信します。
-	 * メッセージコンテキストを構成し、署名パラメータを設定して、
-	 * HTTPRedirectDeflateEncoderでエンコードします。
+	 * HTTP Redirect Binding を使用して AuthnRequest を送信します。
 	 */
 	private void redirectUserWithRequest(HttpServletResponse httpServletResponse, AuthnRequest authnRequest) {
-
-		// メッセージコンテキストの作成と設定
-		// メッセージコンテキストの作成と設定
+		// 送信用のメッセージコンテキストを作成
 		MessageContext context = new MessageContext();
-
 		context.setMessage(authnRequest);
 
-		// SAMLバインディングコンテキストの設定（RelayState付き）
+		// RelayState （状態維持用の文字列）を設定。必要に応じて元のURL等を含めることもあります。
 		SAMLBindingContext bindingContext = context.getSubcontext(SAMLBindingContext.class, true);
 		bindingContext.setRelayState("teststate");
 
-		// IdPエンティティコンテキストの設定
+		// IdP のエンドポイント情報をコンテキストに追加
 		SAMLPeerEntityContext peerEntityContext = context.getSubcontext(SAMLPeerEntityContext.class, true);
-
-		// IdPエンドポイントの設定
 		SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
 		endpointContext.setEndpoint(getIPDEndpoint());
 
-		// 署名パラメータの設定（RSA-SHA256を使用）
+		// 署名パラメータの設定（HTTP Redirect Binding の場合、クエリパラメータに署名が付与されます）
 		SignatureSigningParameters signatureSigningParameters = new SignatureSigningParameters();
 		signatureSigningParameters.setSigningCredential(SPCredentials.getCredential());
 		signatureSigningParameters.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
@@ -198,120 +195,112 @@ public class AccessFilter implements Filter {
 		context.getSubcontext(SecurityParametersContext.class, true)
 				.setSignatureSigningParameters(signatureSigningParameters);
 
-		// HTTP Redirect Bindingエンコーダーの設定
+		// HTTP-Redirect エンコーダーを使用してレスポンスを構成
 		HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
 		encoder.setHttpServletResponseSupplier(() -> httpServletResponse);
 		encoder.setMessageContext(context);
 
 		try {
 			encoder.initialize();
-		} catch (ComponentInitializationException e) {
-			throw new RuntimeException(e);
-		}
+			
+			// デバッグ用: 生成された AuthnRequest XML を表示
+			logger.info("生成された AuthnRequest (未エンコード状態):");
+			OpenSAMLUtils.logSAMLObject(authnRequest);
 
-		// AuthnRequestをログに出力（デバッグ用）
-		logger.info("AuthnRequestの内容(XML): ");
-		OpenSAMLUtils.logSAMLObject(authnRequest);
-
-		logger.info("IdPへリダイレクトします");
-		try {
+			logger.info("IdP ({}) へリダイレクトします。", IDPConstants.SSO_SERVICE);
+			
+			// AuthnRequest を Deflate 圧縮 + Base64 署名してリダイレクトを実行
 			encoder.encode();
-		} catch (MessageEncodingException e) {
-			throw new RuntimeException(e);
+		} catch (ComponentInitializationException | MessageEncodingException e) {
+			throw new RuntimeException("SAML リクエストのエンコードまたは送信に失敗しました", e);
 		}
 	}
 
 	/**
-	 * AuthnRequestの構築
-	 * SAML認証リクエストを作成します。
-	 * このリクエストには、発行者情報、宛先、プロトコルバインディング、
-	 * NameIDポリシー、要求される認証コンテキストなどが含まれます。
+	 * OpenSAML オブジェクトを使用して AuthnRequest を詳細に構成します。
 	 */
 	private AuthnRequest buildAuthnRequest() {
 		AuthnRequest authnRequest = OpenSAMLUtils.buildSAMLObject(AuthnRequest.class);
-		authnRequest.setIssueInstant(Instant.now()); // 発行時刻
-		authnRequest.setDestination(getIPDSSODestination()); // IdPのSSOエンドポイント
-		authnRequest.setProtocolBinding(SAMLConstants.SAML2_ARTIFACT_BINDING_URI); // Artifactバインディングを使用
-		authnRequest.setAssertionConsumerServiceURL(getAssertionConsumerEndpoint()); // SPのレスポンス受信エンドポイント
-		authnRequest.setID(OpenSAMLUtils.generateSecureRandomId()); // 一意のリクエストID
-		authnRequest.setIssuer(buildIssuer()); // 発行者（SP）
-		authnRequest.setNameIDPolicy(buildNameIdPolicy()); // NameIDポリシー
-		authnRequest.setRequestedAuthnContext(buildRequestedAuthnContext()); // 要求される認証コンテキスト
+		
+		// 1. 各種メタデータの設定
+		authnRequest.setIssueInstant(Instant.now());
+		authnRequest.setDestination(getIPDSSODestination()); // 送信先(IdP)のSSOエンドポイント
+		
+		// 2. 認証後のレスポンスとして Artifact Binding を要求
+		authnRequest.setProtocolBinding(SAMLConstants.SAML2_ARTIFACT_BINDING_URI);
+		
+		// 3. 認証後の戻り先（ACS）を指定
+		authnRequest.setAssertionConsumerServiceURL(getAssertionConsumerEndpoint());
+		
+		// 4. 一意なIDと発行者（SP）の設定
+		authnRequest.setID(OpenSAMLUtils.generateSecureRandomId());
+		authnRequest.setIssuer(buildIssuer());
+		
+		// 5. ユーザー識別子(NameID)のポリシーと必須認証レベルの設定
+		authnRequest.setNameIDPolicy(buildNameIdPolicy());
+		authnRequest.setRequestedAuthnContext(buildRequestedAuthnContext());
 
 		return authnRequest;
 	}
 
 	/**
-	 * 要求される認証コンテキストの構築
-	 * IdPに対して、パスワード認証以上のレベルを要求します。
+	 * IdP に対して特定の認証方法（例: パスワード認証）を要求します。
 	 */
 	private RequestedAuthnContext buildRequestedAuthnContext() {
 		RequestedAuthnContext requestedAuthnContext = OpenSAMLUtils.buildSAMLObject(RequestedAuthnContext.class);
-		requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM); // 最小レベルの比較
+		requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
 
-		// パスワード認証コンテキストを指定
 		AuthnContextClassRef passwordAuthnContextClassRef = OpenSAMLUtils.buildSAMLObject(AuthnContextClassRef.class);
 		passwordAuthnContextClassRef.setURI(AuthnContext.PASSWORD_AUTHN_CTX);
 
 		requestedAuthnContext.getAuthnContextClassRefs().add(passwordAuthnContextClassRef);
 
 		return requestedAuthnContext;
-
 	}
 
 	/**
-	 * NameIDポリシーの構築
-	 * IdPに対して、一時的な（TRANSIENT）NameIDフォーマットの作成を許可します。
+	 * NameID （ユーザー識別子）の形式を指定します。
+	 * ここではセッションごとに異なる「TRANSIENT (一時的)」な ID を要求しています。
 	 */
 	private NameIDPolicy buildNameIdPolicy() {
 		NameIDPolicy nameIDPolicy = OpenSAMLUtils.buildSAMLObject(NameIDPolicy.class);
-		nameIDPolicy.setAllowCreate(true); // 新規NameIDの作成を許可
-
-		nameIDPolicy.setFormat(NameIDType.TRANSIENT); // 一時的なNameIDフォーマット
-
+		nameIDPolicy.setAllowCreate(true);
+		nameIDPolicy.setFormat(NameIDType.TRANSIENT);
 		return nameIDPolicy;
 	}
 
 	/**
-	 * 発行者（Issuer）の構築
-	 * このSPのエンティティIDを設定します。
+	 * 発行者（Issuer）要素を構築します。通常は SP のエンティティ ID を含めます。
 	 */
 	private Issuer buildIssuer() {
 		Issuer issuer = OpenSAMLUtils.buildSAMLObject(Issuer.class);
 		issuer.setValue(getSPIssuerValue());
-
 		return issuer;
 	}
 
-	/** SPのエンティティIDを取得 */
 	private String getSPIssuerValue() {
 		return SPConstants.SP_ENTITY_ID;
 	}
 
-	/** Assertionを受け取るSPのエンドポイントURLを取得 */
 	private String getAssertionConsumerEndpoint() {
 		return SPConstants.ASSERTION_CONSUMER_SERVICE;
 	}
 
-	/** IdPのシングルサインオンサービスのURLを取得 */
 	private String getIPDSSODestination() {
 		return IDPConstants.SSO_SERVICE;
 	}
 
 	/**
-	 * IdPエンドポイントオブジェクトの構築
-	 * HTTP Redirectバインディングを使用するSingleSignOnServiceエンドポイントを作成します。
+	 * IdP の SSO サービスエンドポイント情報を定義します。
 	 */
 	private Endpoint getIPDEndpoint() {
 		SingleSignOnService endpoint = OpenSAMLUtils.buildSAMLObject(SingleSignOnService.class);
 		endpoint.setBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 		endpoint.setLocation(getIPDSSODestination());
-
 		return endpoint;
 	}
 
-	/** フィルターの破棄（クリーンアップ処理） */
 	public void destroy() {
-
+		// リソースの解放が必要な場合はここに記述
 	}
 }

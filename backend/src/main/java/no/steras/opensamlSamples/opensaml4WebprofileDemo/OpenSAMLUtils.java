@@ -16,82 +16,89 @@ import net.shibboleth.shared.security.impl.RandomIdentifierGenerationStrategy;
 import net.shibboleth.shared.xml.SerializeSupport;
 
 /**
- * Created by Privat on 4/6/14.
+ * OpenSAMLの共通操作をカプセル化するユーティリティクラス。
+ * SAMLオブジェクトの構築、ID生成、およびデバッグ用のログ出力機能を提供します。
  */
 public class OpenSAMLUtils {
 	// ロガーインスタンス
 	private static Logger logger = LoggerFactory.getLogger(OpenSAMLUtils.class);
+	
+	// セキュアな乱数に基づいたID生成戦略。SAMLメッセージ（AuthnRequest, Assertion等）のIDに使用します。
 	private static RandomIdentifierGenerationStrategy secureRandomIdGenerator;
 
-	// 静的初期化子
+	// 静적初期化子
 	static {
-		// セキュアランダムIDジェネレータの初期化
+		// IDジェネレータの初期化（デフォルトの16バイトのセキュアランダム値を生成）
 		secureRandomIdGenerator = new RandomIdentifierGenerationStrategy();
-
 	}
 
 	/**
-	 * ユーティリティメソッド SAMLオブジェクトの生成
+	 * 指定されたクラス型に対応するSAMLオブジェクトを生成します。
+	 * OpenSAMLではオブジェクトの生成にBuilderFactoryを使用する必要があります。
 	 *
-	 * @param clazz SAMLオブジェクトのクラス
+	 * @param clazz 生成したいSAMLオブジェクトのインターフェースクラス（例: AuthnRequest.class）
 	 * @param <T>   SAMLオブジェクトの型
-	 * @return 生成されたSAMLオブジェクト
+	 * @return 生成・初期化されたSAMLオブジェクト
+	 * @throws IllegalArgumentException オブジェクトの生成に失敗した場合
 	 */
 	public static <T> T buildSAMLObject(final Class<T> clazz) {
 		T object = null;
 		try {
-			// SAMLオブジェクトのビルダーファクトリを取得
+			// OpenSAMLのレジストリからビルダーファクトリを取得
 			XMLObjectBuilderFactory builderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
-			// デフォルトの要素名を取得し、SAMLオブジェクトを生成
+			
+			// 渡されたクラスから定数 DEFAULT_ELEMENT_NAME (XMLのタグ名等を表すQName) を取得
 			QName defaultElementName = (QName) clazz.getDeclaredField("DEFAULT_ELEMENT_NAME").get(null);
-			// SAMLオブジェクトのビルダーを使用してオブジェクトを構築
+			
+			// ビルダーを取得してオブジェクトを構築
 			object = (T) builderFactory.getBuilder(defaultElementName).buildObject(defaultElementName);
 		} catch (IllegalAccessException e) {
-			throw new IllegalArgumentException("Could not create SAML object");
+			throw new IllegalArgumentException("SAMLオブジェクトの生成に失敗しました: アクセス権限エラー", e);
 		} catch (NoSuchFieldException e) {
-			throw new IllegalArgumentException("Could not create SAML object");
+			throw new IllegalArgumentException("SAMLオブジェクトの生成に失敗しました: DEFAULT_ELEMENT_NAME が見つかりません", e);
 		}
 
 		return object;
 	}
 
 	/**
-	 * セキュアランダムIDの生成
+	 * SAMLメッセージの識別子として使用するためのセキュアなランダムIDを生成します。
+	 * SAML仕様に基づき、IDは通常文字で始まる必要があります（ジェネレータがこれを保証）。
 	 *
-	 * @return 生成されたセキュアランダムID
+	 * @return 生成された識別子文字列
 	 */
 	public static String generateSecureRandomId() {
 		return secureRandomIdGenerator.generateIdentifier();
 	}
 
 	/**
-	 * SAMLオブジェクトのログ出力
+	 * SAMLオブジェクトをXML形式で整形してログに出力します。
+	 * メッセージの送受信内容をデバッグ・確認するために使用します。
 	 *
-	 * @param object ログ出力するSAMLオブジェクト
+	 * @param object ログ出力したいSAMLオブジェクト
 	 */
 	public static void logSAMLObject(final XMLObject object) {
 		Element element = null;
 
+		// オブジェクトが署名済みで既にDOMが構築されている場合はそれを使用
 		if (object instanceof SignableSAMLObject && ((SignableSAMLObject) object).isSigned()
 				&& object.getDOM() != null) {
 			element = object.getDOM();
 		} else {
 			try {
-				// SAMLオブジェクトのマーシャラーを取得し、DOM要素に変換
+				// オブジェクトをXML(DOM)に変換（マーシャリング）
 				Marshaller out = XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(object);
-				// マーシャリングを実行
 				out.marshall(object);
-				// DOM要素を取得
 				element = object.getDOM();
 
 			} catch (MarshallingException e) {
-				logger.error(e.getMessage(), e);
+				logger.error("SAMLオブジェクトのマーシャリング中にエラーが発生しました: " + e.getMessage(), e);
 			}
 		}
-		// DOM要素を整形されたXML文字列に変換
+		
+		// DOMをインデント付きの読みやすいXML文字列に変換
 		String xmlString = SerializeSupport.prettyPrintXML(element);
 
-		logger.info(xmlString);
-
+		logger.info("SAMLメッセージ内容:\n{}", xmlString);
 	}
 }

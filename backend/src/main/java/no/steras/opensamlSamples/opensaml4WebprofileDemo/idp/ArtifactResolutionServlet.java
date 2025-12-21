@@ -58,20 +58,25 @@ import no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.SPConstants;
 import no.steras.opensamlSamples.opensaml4WebprofileDemo.sp.SPCredentials;
 
 /**
- * アーティファクト解決用サーブレット
+ * Identity Provider (IdP) 側の Artifact Resolution Service (ARS) エンドポイント。
+ * 
+ * 役割:
+ * 1. SP からバックチャネル（SOAP通信）で送られてくる `ArtifactResolve` リクエストを受信。
+ * 2. 送信されたアーティファクトに対応するアサーションを特定。
+ * 3. アサーション（署名・暗号化済み）をカプセル化した `ArtifactResponse` を SOAP で返信。
  */
 public class ArtifactResolutionServlet extends HttpServlet {
 	private static Logger logger = LoggerFactory.getLogger(ArtifactResolutionServlet.class);
 
 	/**
-	 * POSTリクエストの処理
+	 * SP からの SOAP POST リクエストを処理します。
 	 */
 	@Override
 	protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
 			throws ServletException, IOException {
-		logger.info("ArtifactResolutionServlet.doPost: SPからArtifactResolveリクエストを受信しました。");
+		logger.info("ArtifactResolutionServlet: SP から ArtifactResolve リクエスト（バックチャネル）を受信しました。");
 		
-		// アーティファクト解決リクエストのデコード
+		// 1. SOAP 1.1 デコーダーを使用して SAML メッセージを抽出
 		HTTPSOAP11Decoder decoder = new HTTPSOAP11Decoder();
 		decoder.setHttpServletRequestSupplier(() -> req);
 
@@ -81,117 +86,109 @@ public class ArtifactResolutionServlet extends HttpServlet {
 			decoder.setParserPool(parserPool);
 			decoder.initialize();
 			decoder.decode();
-			logger.info("ArtifactResolutionServlet: リクエスト(ArtifactResolve)のデコードに成功しました。");
-		} catch (MessageDecodingException e) {
-			throw new RuntimeException(e);
-		} catch (ComponentInitializationException e) {
-			throw new RuntimeException(e);
+			logger.info("ArtifactResolutionServlet: リクエスト(ArtifactResolve) のデコードに成功しました。");
+		} catch (MessageDecodingException | ComponentInitializationException e) {
+			throw new RuntimeException("SOAP メッセージのデコードに失敗しました", e);
 		}
 
-		logger.info("ArtifactResolutionServlet: アサーションを含むArtifactResponseを生成します...");
+		// 2. 実際のアサーションを含むレスポンスを構築
+		logger.info("ArtifactResolutionServlet: アサーションを生成し ArtifactResponse を構築します...");
 		ArtifactResponse artifactResponse = buildArtifactResponse();
 
+		// 3. SOAP 1.1 エンコーダーを使用してレスポンスを送信
 		MessageContext context = new MessageContext();
 		context.setMessage(artifactResponse);
-		// アーティファクト解決レスポンスのエンコードと送信
 		HTTPSOAP11Encoder encoder = new HTTPSOAP11Encoder();
 		encoder.setHttpServletResponseSupplier(() -> resp);
 		encoder.setMessageContext(context);
 
 		try {
-			// エンコーダー初期化
 			encoder.prepareContext();
 			encoder.initialize();
 			encoder.encode();
-			logger.info("ArtifactResolutionServlet: ArtifactResponseをSPに返送しました。");
-		} catch (MessageEncodingException e) {
-			throw new RuntimeException(e);
-		} catch (ComponentInitializationException e) {
-			throw new RuntimeException(e);
+			logger.info("ArtifactResolutionServlet: ArtifactResponse を SP に返送しました。");
+		} catch (MessageEncodingException | ComponentInitializationException e) {
+			throw new RuntimeException("SOAP レスポンスのエンコードに失敗しました", e);
 		}
-
 	}
 
 	/**
-	 * アーティファクトレスポンスの構築
-	 * 
-	 * @return アーティファクトレスポンス
+	 * SAML レスポンスの階層構造を構築します。
+	 * ArtifactResponse -> Response -> EncryptedAssertion という構造になります。
 	 */
 	private ArtifactResponse buildArtifactResponse() {
-		// アーティファクトレスポンスの構築
+		// ArtifactResponse の構築（外側のコンテナ）
 		ArtifactResponse artifactResponse = OpenSAMLUtils.buildSAMLObject(ArtifactResponse.class);
-		// 共通属性の設定
+		
 		Issuer issuer = OpenSAMLUtils.buildSAMLObject(Issuer.class);
 		issuer.setValue(IDPConstants.IDP_ENTITY_ID);
 		artifactResponse.setIssuer(issuer);
 		artifactResponse.setIssueInstant(Instant.now());
 		artifactResponse.setDestination(SPConstants.ASSERTION_CONSUMER_SERVICE);
-		// IDを設定
 		artifactResponse.setID(OpenSAMLUtils.generateSecureRandomId());
-		// ステータスの設定
+		
+		// 成功ステータスの設定
 		Status status = OpenSAMLUtils.buildSAMLObject(Status.class);
 		StatusCode statusCode = OpenSAMLUtils.buildSAMLObject(StatusCode.class);
 		statusCode.setValue(StatusCode.SUCCESS);
 		status.setStatusCode(statusCode);
 		artifactResponse.setStatus(status);
-		// レスポンスメッセージの構築(SAMLオブジェクトを作成)
+
+		// Response の構築（実際にアサーションを運ぶメッセージ）
 		Response response = OpenSAMLUtils.buildSAMLObject(Response.class);
 		response.setDestination(SPConstants.ASSERTION_CONSUMER_SERVICE);
 		response.setIssueInstant(Instant.now());
 		response.setID(OpenSAMLUtils.generateSecureRandomId());
-		Issuer issuer2 = OpenSAMLUtils.buildSAMLObject(Issuer.class);
-		issuer2.setValue(IDPConstants.IDP_ENTITY_ID);
+		
+		Issuer resIssuer = OpenSAMLUtils.buildSAMLObject(Issuer.class);
+		resIssuer.setValue(IDPConstants.IDP_ENTITY_ID);
+		response.setIssuer(resIssuer);
 
-		response.setIssuer(issuer2);
-
-		Status status2 = OpenSAMLUtils.buildSAMLObject(Status.class);
-		StatusCode statusCode2 = OpenSAMLUtils.buildSAMLObject(StatusCode.class);
-		statusCode2.setValue(StatusCode.SUCCESS);
-		status2.setStatusCode(statusCode2);
-
-		response.setStatus(status2);
+		Status resStatus = OpenSAMLUtils.buildSAMLObject(Status.class);
+		StatusCode resStatusCode = OpenSAMLUtils.buildSAMLObject(StatusCode.class);
+		resStatusCode.setValue(StatusCode.SUCCESS);
+		resStatus.setStatusCode(resStatusCode);
+		response.setStatus(resStatus);
 
 		artifactResponse.setMessage(response);
-		// アサーションの構築
+
+		// アサーションの生成、署名、および暗号化
 		Assertion assertion = buildAssertion();
-		// アサーションに署名と暗号化を実施
-		signAssertion(assertion);
-		EncryptedAssertion encryptedAssertion = encryptAssertion(assertion);
+		signAssertion(assertion); // 1. 署名
+		EncryptedAssertion encryptedAssertion = encryptAssertion(assertion); // 2. 暗号化
 
 		response.getEncryptedAssertions().add(encryptedAssertion);
+		
 		return artifactResponse;
 	}
 
 	/**
-	 * アサーションの暗号化
+	 * SP の公開鍵を使用してアサーションを完全に暗号化します。
 	 */
 	private EncryptedAssertion encryptAssertion(Assertion assertion) {
-		// アサーションの暗号化
+		// データ暗号化(AES-128)のパラメータ
 		DataEncryptionParameters encryptionParameters = new DataEncryptionParameters();
-		// アルゴリズムを設定
 		encryptionParameters.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES128);
 
+		// 鍵暗号化(RSA-OAEP)のパラメータ（SP の公開鍵を使用）
 		KeyEncryptionParameters keyEncryptionParameters = new KeyEncryptionParameters();
 		keyEncryptionParameters.setEncryptionCredential(SPCredentials.getCredential());
 		keyEncryptionParameters.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
-		// Encrypterの生成
+
 		Encrypter encrypter = new Encrypter(encryptionParameters, keyEncryptionParameters);
 		encrypter.setKeyPlacement(Encrypter.KeyPlacement.INLINE);
 
 		try {
-			// 暗号化の実行
-			EncryptedAssertion encryptedAssertion = encrypter.encrypt(assertion);
-			return encryptedAssertion;
+			return encrypter.encrypt(assertion);
 		} catch (EncryptionException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("アサーションの暗号化に失敗しました", e);
 		}
 	}
 
 	/**
-	 * アサーションへの署名付与
+	 * IdP の秘密鍵を使用してアサーションにデジタル署名を付与します。
 	 */
 	private void signAssertion(Assertion assertion) {
-		// 署名オブジェクトの生成
 		Signature signature = OpenSAMLUtils.buildSAMLObject(Signature.class);
 		signature.setSigningCredential(IDPCredentials.getCredential());
 		signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
@@ -200,51 +197,45 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		assertion.setSignature(signature);
 
 		try {
-			// 署名対象オブジェクトのマーシャリング
+			// 署名の前に DOM 要素に変換（マーシャリング）が必要
 			XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(assertion).marshall(assertion);
-		} catch (MarshallingException e) {
-			throw new RuntimeException(e);
-		}
-
-		try {
-			// 署名の実行
 			Signer.signObject(signature);
-		} catch (SignatureException e) {
-			throw new RuntimeException(e);
+		} catch (MarshallingException | SignatureException e) {
+			throw new RuntimeException("アサーションの署名に失敗しました", e);
 		}
 	}
 
 	/**
-	 * アサーションの構築
-	 * 
-	 * @return アサーション
+	 * ユーザーの認証情報や属性を含むアサーションを詳細に構築します。
 	 */
 	private Assertion buildAssertion() {
-		// アサーションの構築
 		Assertion assertion = OpenSAMLUtils.buildSAMLObject(Assertion.class);
-		// 共通属性の設定
+		
 		Issuer issuer = OpenSAMLUtils.buildSAMLObject(Issuer.class);
 		issuer.setValue(IDPConstants.IDP_ENTITY_ID);
 		assertion.setIssuer(issuer);
 		assertion.setIssueInstant(Instant.now());
-
 		assertion.setID(OpenSAMLUtils.generateSecureRandomId());
 
+		// 認証対象(Subject)の設定
 		Subject subject = OpenSAMLUtils.buildSAMLObject(Subject.class);
 		assertion.setSubject(subject);
-		// NameIDの設定
+		
+		// 名前 ID (NameID) の設定。ここではダミー値を設定。
 		NameID nameID = OpenSAMLUtils.buildSAMLObject(NameID.class);
-		// NameIDの各種属性を設定
 		nameID.setFormat(NameIDType.TRANSIENT);
-		nameID.setValue("Some NameID value");
-		nameID.setSPNameQualifier("SP name qualifier");
-		nameID.setNameQualifier("Name qualifier");
-
+		nameID.setValue("bob-at-idp-demo");
+		nameID.setSPNameQualifier(SPConstants.SP_ENTITY_ID);
+		nameID.setNameQualifier(IDPConstants.IDP_ENTITY_ID);
 		subject.setNameID(nameID);
 
+		// 認証の有効性(SubjectConfirmation)を設定
 		subject.getSubjectConfirmations().add(buildSubjectConfirmation());
-		// アサーションの各種属性設定
+		
+		// 有効期限や対象範囲(Conditions)の設定
 		assertion.setConditions(buildConditions());
+		
+		// ユーザー属性(AttributeStatement)と認証情報(AuthnStatement)の設定
 		assertion.getAttributeStatements().add(buildAttributeStatement());
 		assertion.getAuthnStatements().add(buildAuthnStatement());
 
@@ -259,7 +250,8 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);
 
 		SubjectConfirmationData subjectConfirmationData = OpenSAMLUtils.buildSAMLObject(SubjectConfirmationData.class);
-		subjectConfirmationData.setInResponseTo("Made up ID");
+		subjectConfirmationData.setInResponseTo("AuthnRequest-ID-Check-Skipped-In-Demo");
+		subjectConfirmationData.setInResponseTo(null); // デモ用
 		subjectConfirmationData.setNotBefore(Instant.now());
 		subjectConfirmationData.setNotOnOrAfter(Instant.now().plus(10, ChronoUnit.MINUTES));
 		subjectConfirmationData.setRecipient(SPConstants.ASSERTION_CONSUMER_SERVICE);
@@ -276,10 +268,11 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		AuthnStatement authnStatement = OpenSAMLUtils.buildSAMLObject(AuthnStatement.class);
 		AuthnContext authnContext = OpenSAMLUtils.buildSAMLObject(AuthnContext.class);
 		AuthnContextClassRef authnContextClassRef = OpenSAMLUtils.buildSAMLObject(AuthnContextClassRef.class);
+		
+		// スマートカード認証相当の結果として設定
 		authnContextClassRef.setURI(AuthnContext.SMARTCARD_AUTHN_CTX);
 		authnContext.setAuthnContextClassRef(authnContextClassRef);
 		authnStatement.setAuthnContext(authnContext);
-
 		authnStatement.setAuthnInstant(Instant.now());
 
 		return authnStatement;
@@ -292,40 +285,40 @@ public class ArtifactResolutionServlet extends HttpServlet {
 		Conditions conditions = OpenSAMLUtils.buildSAMLObject(Conditions.class);
 		conditions.setNotBefore(Instant.now());
 		conditions.setNotOnOrAfter(Instant.now().plus(10, ChronoUnit.MINUTES));
+		
 		AudienceRestriction audienceRestriction = OpenSAMLUtils.buildSAMLObject(AudienceRestriction.class);
 		Audience audience = OpenSAMLUtils.buildSAMLObject(Audience.class);
-		audience.setURI(SPConstants.ASSERTION_CONSUMER_SERVICE);
+		audience.setURI(SPConstants.SP_ENTITY_ID);
 		audienceRestriction.getAudiences().add(audience);
 		conditions.getAudienceRestrictions().add(audienceRestriction);
+		
 		return conditions;
 	}
 
 	/**
-	 * AttributeStatementの構築
+	 * ユーザーの属性（ユーザー名、役割など）を構築します。
 	 */
 	private AttributeStatement buildAttributeStatement() {
 		AttributeStatement attributeStatement = OpenSAMLUtils.buildSAMLObject(AttributeStatement.class);
 
+		// ユーザー名属性の追加
 		Attribute attributeUserName = OpenSAMLUtils.buildSAMLObject(Attribute.class);
-
 		XSStringBuilder stringBuilder = (XSStringBuilder) XMLObjectProviderRegistrySupport.getBuilderFactory()
 				.getBuilder(XSString.TYPE_NAME);
 		XSString userNameValue = stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
 		userNameValue.setValue("bob");
-
 		attributeUserName.getAttributeValues().add(userNameValue);
 		attributeUserName.setName("username");
 		attributeStatement.getAttributes().add(attributeUserName);
 
-		Attribute attributeLevel = OpenSAMLUtils.buildSAMLObject(Attribute.class);
-		XSString levelValue = stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-		levelValue.setValue("999999999");
-
-		attributeLevel.getAttributeValues().add(levelValue);
-		attributeLevel.setName("telephone");
-		attributeStatement.getAttributes().add(attributeLevel);
+		// 役割や追加情報の追加
+		Attribute attributeRole = OpenSAMLUtils.buildSAMLObject(Attribute.class);
+		XSString roleValue = stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+		roleValue.setValue("Administrator");
+		attributeRole.getAttributeValues().add(roleValue);
+		attributeRole.setName("role");
+		attributeStatement.getAttributes().add(attributeRole);
 
 		return attributeStatement;
-
 	}
 }
