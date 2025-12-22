@@ -401,5 +401,39 @@ IdPが認証結果を伝えるためのXMLです。
 </saml2p:Response>
 ```
 
+### 4. メタデータの自動交換 (Metadata Auto-Exchange)
+
+運用環境では、メタデータをファイルとして手動で交換する代わりに、HTTPエンドポイントを介して動的に取得・更新する仕組みが一般的に利用されます。
+
+- **利点**:
+    - **証明書更新の自動化**: 証明書が更新された際、各システムが自動的に新しいメタデータを取得するため、手動の作業ミスを防げます。
+    - **スケーラビリティ**: 連携先が増えた場合でも、URLを登録するだけで管理が可能になります。
+
+- **OpenSAML 5 での実装イメージ**:
+    OpenSAMLでは `HTTPMetadataResolver` を使用して、リモートのURLから定期的にメタデータをフェッチできます。
+
+  ```java
+  // 1. HTTPMetadataResolverの構築
+  HTTPMetadataResolver metadataResolver = new HTTPMetadataResolver(
+      httpClient, "http://idp.example.com/metadata"
+  );
+  
+  // 2. キャッシュとリフレッシュ周期の設定
+  metadataResolver.setMinRefreshDelay(Duration.ofMinutes(5));
+  metadataResolver.setMaxRefreshDelay(Duration.ofHours(1));
+  
+  // 3. セキュリティ：メタデータ自体の署名検証
+  SignatureValidationFilter sigFilter = new SignatureValidationFilter(
+      new ExplicitKeySignatureTrustEngine(keyResolver, sigTrustEngine),
+      new SAMLSignatureProfileValidator()
+  );
+  metadataResolver.setMetadataFilter(sigFilter);
+  
+  // 4. 初期化
+  metadataResolver.initialize();
+  ```
+
+---
+
 ## 参考文献
 - [DeepWiki](https://deepwiki.com/rasmusson/OpenSAML-sample-code)
