@@ -154,7 +154,9 @@ public class AccessFilter implements Filter {
 	 * 認証後の戻り先 URL をセッションに保存します。
 	 */
 	private void setGotoURLOnSession(HttpServletRequest request) {
+		// 現在の URL を取得してセッションに保存
 		String currentUrl = request.getRequestURL().toString();
+		// セッションに保存
 		request.getSession().setAttribute(SPConstants.GOTO_URL_SESSION_ATTRIBUTE, currentUrl);
 		logger.debug("戻り先URLを保存しました: {}", currentUrl);
 	}
@@ -163,7 +165,7 @@ public class AccessFilter implements Filter {
 	 * AuthnRequest を構築し、IdP へリダイレクト送信します。
 	 */
 	private void redirectUserForAuthentication(HttpServletResponse httpServletResponse) {
-		// 1. AuthnRequest オブジェクトの構築
+		// 1. AuthnRequest オブジェクトの構築(SAMLリクエストの生成)
 		AuthnRequest authnRequest = buildAuthnRequest();
 		
 		// 2. ブラウザ経由のリダイレクト送信を実行
@@ -278,20 +280,37 @@ public class AccessFilter implements Filter {
 		return issuer;
 	}
 
+	/**
+	 * SP のエンティティ ID を取得します。
+	 * 定数ファイルから取得
+	 * @return
+	 */
 	private String getSPIssuerValue() {
 		return SPConstants.SP_ENTITY_ID;
 	}
 
+	/**
+	 * SP の ASSERTION_CONSUMER_SERVICE エンドポイントを取得します。
+	 * 定数ファイルから取得
+	 * @return
+	 */
 	private String getAssertionConsumerEndpoint() {
 		return SPConstants.ASSERTION_CONSUMER_SERVICE;
 	}
 
+	/**
+	 * IdP の SSO サービスエンドポイントを取得します。
+	 * 定数ファイルから取得
+	 * @return
+	 */
 	private String getIPDSSODestination() {
 		return IDPConstants.SSO_SERVICE;
 	}
 
 	/**
 	 * IdP の SSO サービスエンドポイント情報を定義します。
+	 * 定数ファイルから取得
+	 * locationヘッダーにはIdPのSSOサービスエンドポイントを指定
 	 */
 	private Endpoint getIPDEndpoint() {
 		SingleSignOnService endpoint = OpenSAMLUtils.buildSAMLObject(SingleSignOnService.class);
