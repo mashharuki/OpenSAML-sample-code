@@ -1,17 +1,29 @@
 package no.steras.opensamlSamples.opensaml4WebprofileDemo.idp;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
+
 /**
  * IDP定数クラス
  */
+@Component
 public class IDPConstants {
-	// ベースURL（環境変数から取得、未設定時はlocalhostをデフォルトとして使用）
-	private static final String BASE_URL = System.getenv("BASE_URL") != null
-		? System.getenv("BASE_URL")
-		: "http://localhost:8080";
+    @Value("${app.base-url}")
+    private String baseUrl;
 
-	// エンティティID
-	public static final String IDP_ENTITY_ID = "TestIDP";
-	// SSOサービスURL(SSOエンドポイント SAMLリクエスト受信URL ⇨ SAMLレスポンス送信URL)
-	public static final String SSO_SERVICE = BASE_URL + "/opensaml5-webprofile-demo/idp/singleSignOnService";
-	public static final String ARTIFACT_RESOLUTION_SERVICE = BASE_URL + "/opensaml5-webprofile-demo/idp/artifactResolutionService";
+    @Value("${app.idp-entity-id}")
+    private String idpEntityId;
+
+    public static String IDP_ENTITY_ID;
+    public static String SSO_SERVICE;
+    public static String ARTIFACT_RESOLUTION_SERVICE;
+
+    @PostConstruct
+    public void init() {
+        IDP_ENTITY_ID = idpEntityId;
+        SSO_SERVICE = baseUrl + "/opensaml5-webprofile-demo/idp/singleSignOnService";
+        ARTIFACT_RESOLUTION_SERVICE = baseUrl + "/opensaml5-webprofile-demo/idp/artifactResolutionService";
+    }
 }

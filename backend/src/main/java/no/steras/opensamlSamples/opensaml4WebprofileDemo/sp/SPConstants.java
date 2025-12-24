@@ -1,18 +1,29 @@
 package no.steras.opensamlSamples.opensaml4WebprofileDemo.sp;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
+
 /**
  * SP用の定数クラス
  */
+@Component
 public class SPConstants {
-	// ベースURL（環境変数から取得、未設定時はlocalhostをデフォルトとして使用）
-	private static final String BASE_URL = System.getenv("BASE_URL") != null
-		? System.getenv("BASE_URL")
-		: "http://localhost:8080";
+    @Value("${app.base-url}")
+    private String baseUrl;
 
-	public static final String SP_ENTITY_ID = "TestSP";
-	public static final String AUTHENTICATED_SESSION_ATTRIBUTE = "authenticated";
-	public static final String GOTO_URL_SESSION_ATTRIBUTE = "gotoURL";
-	// ACS URL
-	public static final String ASSERTION_CONSUMER_SERVICE = BASE_URL + "/opensaml5-webprofile-demo/sp/consumer";
+    @Value("${app.sp-entity-id}")
+    private String spEntityId;
 
+    public static String SP_ENTITY_ID;
+    public static final String AUTHENTICATED_SESSION_ATTRIBUTE = "authenticated";
+    public static final String GOTO_URL_SESSION_ATTRIBUTE = "gotoURL";
+    public static String ASSERTION_CONSUMER_SERVICE;
+
+    @PostConstruct
+    public void init() {
+        SP_ENTITY_ID = spEntityId;
+        ASSERTION_CONSUMER_SERVICE = baseUrl + "/opensaml5-webprofile-demo/sp/consumer";
+    }
 }
